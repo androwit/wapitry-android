@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">WAPI Try</string>
+    <string name="client_id">WAPITRY_LLF212</string>
+    <string name="client_secret">3a0807b2-125e-421c-8ea3-bbf69e368b2d</string>
+    <string name="redirect_uri">http://localhost</string>
+    <string name="wapi_authorise">https://beta.wit-datacenter.com/developer/oauth/authorize?client_id=%1$s&amp;response_type=code&amp;redirect_uri=%2$s&amp;scope=https://api.wit-datacenter.com</string>
+    <string name="wapi_token">https://beta.wit-datacenter.com/developer/oauth/token</string>
+    <string name="wapi_GetBusinessAccountsMy">https://beta.wit-datacenter.com/wapi/BusinessAccount/My</string>
+    <string name="title_activity_accounts">Comptes</string>
+    <string name="title_activity_auth">Authentification</string>
+    <string name="caption_disconnect">Déconnecter</string>
+
+</resources>
