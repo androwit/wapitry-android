@@ -268,11 +268,12 @@ public class WAPIClient {
         return accounts;
     }
 
-    public List<Reflection> requestReflections(String wac) {
+    public int nextSkip = 0;
+    public List<Reflection> requestReflections(String wac, int skip, int take) {
         List<Reflection> reflections = new ArrayList<Reflection>();
         try {
             Resources res = _main.getResources();
-            String url = String.format(res.getString(R.string.wapi_SearchReflections), wac);
+            String url = String.format(res.getString(R.string.wapi_SearchReflections), wac, skip, take);
             String responseText = this.get(url, true);
             JSONObject jsonContainer = new JSONObject(responseText);
             JSONArray json = jsonContainer.getJSONArray("reflections");
@@ -289,4 +290,12 @@ public class WAPIClient {
 
         return reflections;
     }
+
+    public List<Reflection> nextRequestReflections(String wac) {
+        int pageSize = 20;
+        int newSkip = nextSkip;
+        nextSkip+=pageSize;
+        return requestReflections(wac, newSkip, pageSize);
+    }
+
 }

@@ -10,16 +10,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 
 import fr.fitoussoft.wapitry.R;
 import fr.fitoussoft.wapitry.helpers.WAPIClient;
@@ -30,30 +28,8 @@ public class ReflectionsActivity extends Activity {
     private List<Reflection> reflections;
     private String wac;
     private ArrayAdapter<Reflection> reflectionsAdapter;
-    private AsyncTask<String,Integer,List<Reflection>> requestReflections;
     private ProgressBar progressBar;
-
-
-
-    private AsyncTask<String,Integer,List<Reflection>> createRequestAsyncTask() {
-        return new AsyncTask<String,Integer,List<Reflection>>() {
-            @Override
-            protected List<Reflection> doInBackground(String... strings) {
-                WAPIClient client = MainActivity.getClient();
-                return client.requestReflections(strings[0]);
-            }
-
-            @Override
-            protected void onPostExecute(List<Reflection> list) {
-                if(list != null) {
-                    reflectionsAdapter.clear();
-                    reflectionsAdapter.addAll(list);
-                }
-
-                progressBar.setVisibility(View.INVISIBLE);
-            }
-        };
-    }
+    private boolean loading = true;
 
     private void navigateToAuth() {
         Intent myIntent = new Intent(ReflectionsActivity.this, AuthActivity.class);
@@ -69,7 +45,7 @@ public class ReflectionsActivity extends Activity {
 
         wac = getIntent().getExtras().getString("wac");
 
-        if(progressBar == null) {
+        if (progressBar == null) {
             progressBar = (ProgressBar) findViewById(R.id.progressBar);
         }
 
@@ -114,14 +90,14 @@ public class ReflectionsActivity extends Activity {
         }
 
         ListView listView = (ListView) findViewById(R.id.reflections);
+        listView.setOnScrollListener(new EndlessScrollListener());
         listView.setAdapter(reflectionsAdapter);
 
-        if(requestReflections == null) {
-            requestReflections = createRequestAsyncTask();
-        }
 
         progressBar.setVisibility(View.VISIBLE);
-        requestReflections.execute(wac);
+        MainActivity.getClient().nextSkip = 0;
+        ReflectionsAsyncTask task = new ReflectionsAsyncTask();
+        task.execute(wac);
     }
 
     @Override
@@ -141,5 +117,66 @@ public class ReflectionsActivity extends Activity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public class ReflectionsAsyncTask extends AsyncTask<String, Integer, List<Reflection>> {
+        @Override
+        protected List<Reflection> doInBackground(String... strings) {
+            WAPIClient client = MainActivity.getClient();
+            return client.nextRequestReflections(strings[0]);
+        }
+
+        @Override
+        protected void onPostExecute(List<Reflection> list) {
+            if (list != null) {
+                //reflectionsAdapter.clear();
+                reflectionsAdapter.addAll(list);
+            }
+
+            progressBar.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    public class EndlessScrollListener implements AbsListView.OnScrollListener {
+
+        private int visibleThreshold = 2;
+        private int currentPage = 0;
+        private int previousTotal = 0;
+
+        public EndlessScrollListener() {
+        }
+
+        public EndlessScrollListener(int visibleThreshold) {
+            this.visibleThreshold = visibleThreshold;
+        }
+
+        @Override
+        public void onScroll(AbsListView view, int firstVisibleItem,
+                             int visibleItemCount, int totalItemCount) {
+
+            if (loading) {
+                if (totalItemCount > previousTotal) {
+                    loading = false;
+                    previousTotal = totalItemCount;
+                    currentPage++;
+                }
+            }
+
+            if (!loading && (totalItemCount - visibleItemCount) <= (firstVisibleItem + visibleThreshold)) {
+                // I load the next page of gigs using a background task,
+                // but you can call any function here.
+                progressBar.setVisibility(View.VISIBLE);
+                ReflectionsAsyncTask task = new ReflectionsAsyncTask();
+                Log.d("[TRY]", "execute from scroll");
+                task.execute(wac);
+                loading = true;
+            }
+
+            //Log.d("[TRY]", String.format("totalItemCount:%1$d, previousTotal:%2$d, visibleItemCount:%3$d, firstVisibleItem:%4$d", totalItemCount, previousTotal, visibleItemCount, firstVisibleItem));
+        }
+
+        @Override
+        public void onScrollStateChanged(AbsListView view, int scrollState) {
+        }
     }
 }
