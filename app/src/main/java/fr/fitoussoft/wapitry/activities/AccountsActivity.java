@@ -1,9 +1,9 @@
 package fr.fitoussoft.wapitry.activities;
 
-import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -18,13 +18,17 @@ import android.widget.TextView;
 import java.util.List;
 
 import fr.fitoussoft.wapitry.R;
+import fr.fitoussoft.wapitry.helpers.WAPIClient;
 import fr.fitoussoft.wapitry.models.Account;
-
 
 public class AccountsActivity extends Activity {
 
+    private List<Account> accounts;
 
-    public void disconnect() {
+    private ArrayAdapter<Account> accountsAdapter;
+
+    private void disconnect() {
+        Log.d("[TRY]", "disconnect.");
         MainActivity.getClient().resetTokens();
         CookieSyncManager.createInstance(this);
         CookieManager cookieManager = CookieManager.getInstance();
@@ -32,7 +36,7 @@ public class AccountsActivity extends Activity {
         this.navigateToAuth();
     }
 
-    public void navigateToAuth() {
+    private void navigateToAuth() {
         Intent myIntent = new Intent(AccountsActivity.this, AuthActivity.class);
         //myIntent.putExtra("key", value); //Optional parameters
         AccountsActivity.this.startActivity(myIntent);
@@ -40,41 +44,52 @@ public class AccountsActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d("[TRY]", "Accounts onCreate.");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.accounts);
 
-        ActionBar actionBar = this.getActionBar();
-        actionBar.setDisplayHomeAsUpEnabled(true);
-
-        List<Account> accounts = MainActivity.getClient().requestBusinessAccounts();
-
-        ArrayAdapter<Account> adapter = new ArrayAdapter<Account>(this,
-                R.layout.account_item, accounts) {
-
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
-                // Get the data item for this position
-                Account account = getItem(position);
-                // Check if an existing view is being reused, otherwise inflate the view
-                if (convertView == null) {
-                    convertView = LayoutInflater.from(getContext()).inflate(R.layout.account_item, parent, false);
-                }
-                // Lookup view for data population
-                TextView tvName = (TextView) convertView.findViewById(R.id.name);
-                TextView tvWac = (TextView) convertView.findViewById(R.id.wac);
-                // Populate the data into the template view using the data object
-                tvName.setText(account.getName());
-                tvWac.setText(account.getWac());
-                // Return the completed view to render on screen
-                return convertView;
+        if (accounts == null) {
+            WAPIClient client =  MainActivity.getClient();
+            if (!client.hasAccessToken() && client.hasExpired() && (!client.hasRefreshToken() || !client.refreshAccess())) {
+                navigateToAuth();
+                return;
             }
 
-        };
+            accounts = client.requestBusinessAccounts();
+        }
+
+        if (accountsAdapter == null) {
+            accountsAdapter = new ArrayAdapter<Account>(this, R.layout.account_item, accounts) {
+
+                @Override
+                public View getView(int position, View convertView, ViewGroup parent) {
+                    // Get the data item for this position
+                    Account account = getItem(position);
+                    // Check if an existing view is being reused, otherwise inflate the view
+                    if (convertView == null) {
+                        convertView = LayoutInflater.from(getContext()).inflate(R.layout.account_item, parent, false);
+                    }
+                    // Lookup view for data population
+                    TextView tvName = (TextView) convertView.findViewById(R.id.name);
+                    TextView tvWac = (TextView) convertView.findViewById(R.id.wac);
+                    // Populate the data into the template view using the data object
+                    tvName.setText(account.getName());
+                    tvWac.setText(account.getWac());
+                    // Return the completed view to render on screen
+                    return convertView;
+                }
+            };
+        }
 
         ListView listView = (ListView) findViewById(R.id.accounts);
-        listView.setAdapter(adapter);
+        listView.setAdapter(accountsAdapter);
     }
 
+    @Override
+    protected void onResume() {
+        Log.d("[TRY]", "Accounts onResume.");
+        super.onResume();
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

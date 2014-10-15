@@ -16,37 +16,44 @@ public class MainActivity extends Activity {
         return _client;
     }
 
-    public void navigateToAccounts() {
+    private void navigateToAccounts() {
         Intent myIntent = new Intent(MainActivity.this, AccountsActivity.class);
         //myIntent.putExtra("key", value); //Optional parameters
         MainActivity.this.startActivity(myIntent);
     }
 
-    public void navigateToAuth() {
+    private void navigateToAuth() {
         Intent myIntent = new Intent(MainActivity.this, AuthActivity.class);
         //myIntent.putExtra("key", value); //Optional parameters
         MainActivity.this.startActivity(myIntent);
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.main);
-
-        // setup WAPI client.
-        _client = new WAPIClient(this);
-
-        if (_client.hasAccessToken() && !_client.hasExpired()) {
-            Log.d("[TRY]", "has an access token.");
-            // goto accounts
-            this.navigateToAccounts();
-            return;
-        } else if (_client.hasExpired() && _client.hasRefreshToken() && _client.refreshAccess()) {
-            // goto accounts
-            this.navigateToAccounts();
+    private void verifyTokenAndGoHome() {
+        if(MainActivity.getClient().hasRefreshToken()) {
+            navigateToAccounts();
             return;
         }
 
         this.navigateToAuth();
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        Log.d("[TRY]", "Main onCreate.");
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);
+
+        if (_client == null) {
+            // setups WAPIClient.
+            _client = new WAPIClient(this);
+        }
+
+    }
+
+    @Override
+    protected void onResume() {
+        Log.d("[TRY]", "Main onResume.");
+        super.onResume();
+        verifyTokenAndGoHome();
     }
 }
