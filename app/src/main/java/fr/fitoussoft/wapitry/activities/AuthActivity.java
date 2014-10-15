@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.net.http.SslError;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -23,13 +24,30 @@ public class AuthActivity extends Activity {
 
     private WebView loginWebView;
     private WebViewClient loginWebViewClient;
+    private AsyncTask<String,Integer,Boolean> requestAccessTask;
 
-    public void navigateToAccounts() {
-        Intent myIntent = new Intent(AuthActivity.this, AccountsActivity.class);
+    public void navigateToMain() {
+        Intent myIntent = new Intent(AuthActivity.this, MainActivity.class);
         //myIntent.putExtra("key", value); //Optional parameters
         AuthActivity.this.startActivity(myIntent);
     }
 
+    private AsyncTask<String,Integer,Boolean> createRequestAsyncTask() {
+        return new AsyncTask<String,Integer,Boolean>() {
+            @Override
+            protected Boolean doInBackground(String... strings) {
+                WAPIClient client = MainActivity.getClient();
+                return client.requestAccess(strings[0]);
+            }
+
+            @Override
+            protected void onPostExecute(Boolean aBoolean) {
+                if(aBoolean) {
+                    navigateToMain();
+                }
+            }
+        };
+    }
 
     private WebViewClient createWebViewClient() {
         return new WebViewClient() {
@@ -65,6 +83,7 @@ public class AuthActivity extends Activity {
                 String code = this.extractCodeFromURL(url);
                 if (code == null) {
                     Log.d("[TRY]", "code not found.");
+                    view.setVisibility(View.VISIBLE);
                     super.onPageFinished(view, url);
                     return;
                 }
@@ -73,11 +92,7 @@ public class AuthActivity extends Activity {
                 view.setVisibility(View.INVISIBLE);
 
                 // use code in POST request to get token.
-                WAPIClient client = MainActivity.getClient();
-                boolean result = client.requestAccess(code);
-                if (result) {
-                    navigateToAccounts();
-                }
+                requestAccessTask.execute(code);
             }
         };
     }
@@ -88,7 +103,6 @@ public class AuthActivity extends Activity {
                 res.getString(R.string.client_id),
                 res.getString(R.string.redirect_uri));
         Log.d("[TRY]", "url_authorise=" + url);
-        loginWebView.setVisibility(View.VISIBLE);
         loginWebView.loadUrl(url);
     }
 
@@ -106,10 +120,15 @@ public class AuthActivity extends Activity {
             if (loginWebViewClient == null) {
                 loginWebViewClient = createWebViewClient();
                 loginWebView.setWebViewClient(loginWebViewClient);
+                loginWebView.setVisibility(View.INVISIBLE);
             }
 
             ws.setSaveFormData(false);
             loginWebView.getSettings().setJavaScriptEnabled(true);
+        }
+
+        if(requestAccessTask == null) {
+            requestAccessTask = createRequestAsyncTask();
         }
 
         authenticate();
