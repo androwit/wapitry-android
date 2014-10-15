@@ -8,8 +8,12 @@
     <string name="wapi_authorise">https://beta.wit-datacenter.com/developer/oauth/authorize?client_id=%1$s&amp;response_type=code&amp;redirect_uri=%2$s&amp;scope=https://api.wit-datacenter.com</string>
     <string name="wapi_token">https://beta.wit-datacenter.com/developer/oauth/token</string>
     <string name="wapi_GetBusinessAccountsMy">https://beta.wit-datacenter.com/wapi/BusinessAccount/My</string>
+    <string name="wapi_SearchReflections">https://beta.wit-datacenter.com/wapi/%s/Reflection</string>
     <string name="title_activity_accounts">Comptes</string>
     <string name="title_activity_auth">Authentification</string>
     <string name="caption_disconnect">Déconnecter</string>
+    <string name="title_activity_reflections">Reflets</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
 
 </resources>

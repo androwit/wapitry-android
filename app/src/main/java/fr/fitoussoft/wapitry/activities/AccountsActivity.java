@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -49,8 +50,8 @@ public class AccountsActivity extends Activity {
         setContentView(R.layout.accounts);
 
         if (accounts == null) {
-            WAPIClient client =  MainActivity.getClient();
-            if (!client.hasAccessToken() && client.hasExpired() && (!client.hasRefreshToken() || !client.refreshAccess())) {
+            WAPIClient client = MainActivity.getClient();
+            if ((!client.hasAccessToken() || client.hasExpired()) && (!client.hasRefreshToken() || !client.refreshAccess())) {
                 navigateToAuth();
                 return;
             }
@@ -65,24 +66,38 @@ public class AccountsActivity extends Activity {
                 public View getView(int position, View convertView, ViewGroup parent) {
                     // Get the data item for this position
                     Account account = getItem(position);
+
                     // Check if an existing view is being reused, otherwise inflate the view
                     if (convertView == null) {
                         convertView = LayoutInflater.from(getContext()).inflate(R.layout.account_item, parent, false);
                     }
+
                     // Lookup view for data population
                     TextView tvName = (TextView) convertView.findViewById(R.id.name);
                     TextView tvWac = (TextView) convertView.findViewById(R.id.wac);
+
                     // Populate the data into the template view using the data object
                     tvName.setText(account.getName());
                     tvWac.setText(account.getWac());
+
                     // Return the completed view to render on screen
                     return convertView;
                 }
+
             };
         }
 
         ListView listView = (ListView) findViewById(R.id.accounts);
         listView.setAdapter(accountsAdapter);
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapter, View view, int position, long arg) {
+                Intent appInfo = new Intent(AccountsActivity.this, ReflectionsActivity.class);
+                appInfo.putExtra("wac", accounts.get(position).getWac()); //Optional parameters
+                startActivity(appInfo);
+            }
+        });
     }
 
     @Override

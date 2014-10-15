@@ -40,6 +40,7 @@ import java.util.List;
 import fr.fitoussoft.wapitry.R;
 import fr.fitoussoft.wapitry.activities.MainActivity;
 import fr.fitoussoft.wapitry.models.Account;
+import fr.fitoussoft.wapitry.models.Reflection;
 
 /**
  * Created by emmanuel.fitoussi on 07/10/2014.
@@ -56,9 +57,9 @@ public class WAPIClient {
     public WAPIClient(MainActivity main) {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().detectAll().permitAll().build();
         StrictMode.setThreadPolicy(policy);
+
         _client = WAPIClient.getNewHttpClient();
         _main = main;
-
 
         // restore stored tokens
         _prefs = _main.getPreferences(Context.MODE_PRIVATE);
@@ -89,10 +90,6 @@ public class WAPIClient {
         }
     }
 
-    public HttpClient getClient() {
-        return _client;
-    }
-
     public boolean hasAccessToken() {
         return _accessToken != null && !_accessToken.isEmpty();
     }
@@ -102,15 +99,7 @@ public class WAPIClient {
     }
 
     public boolean hasExpired() {
-        return _expireDate == null || _expireDate.before(Calendar.getInstance());
-    }
-
-    public boolean haveToRefreshAccessToken() {
-        return this.hasExpired() && this.hasRefreshToken();
-    }
-
-    public boolean haveToGetRefreshToken() {
-        return !this.hasRefreshToken();
+        return _expireDate == null || _expireDate.getTimeInMillis() <= Calendar.getInstance().getTimeInMillis();
     }
 
     public String get(String url, boolean withAccessToken) {
@@ -277,5 +266,27 @@ public class WAPIClient {
         }
 
         return accounts;
+    }
+
+    public List<Reflection> requestReflections(String wac) {
+        List<Reflection> reflections = new ArrayList<Reflection>();
+        try {
+            Resources res = _main.getResources();
+            String url = String.format(res.getString(R.string.wapi_SearchReflections), wac);
+            String responseText = this.get(url, true);
+            JSONObject jsonContainer = new JSONObject(responseText);
+            JSONArray json = jsonContainer.getJSONArray("reflections");
+            for (int i = 0; i < json.length(); i++) {
+                JSONObject jsonO = (JSONObject) json.get(i);
+                reflections.add(new Reflection(jsonO));
+            }
+            Log.d("[TRY]", "json=" + json);
+        } catch (ParseException e) {
+            Log.e("[TRY]", "Parse Exception " + e + "");
+        } catch (Exception e) {
+            Log.e("[TRY]", "Unknown Exception " + e + "");
+        }
+
+        return reflections;
     }
 }
