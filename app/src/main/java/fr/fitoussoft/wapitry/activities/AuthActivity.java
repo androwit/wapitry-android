@@ -99,8 +99,9 @@ public class AuthActivity extends Activity {
 
     private void authenticate() {
         Resources res = getResources();
-        String url = String.format(res.getString(R.string.wapi_authorise),
-                res.getString(R.string.client_id),
+        WAPIClient client = MainActivity.getClient();
+        String url = String.format(client.getConfig().wapiAuthorise,
+                client.getConfig().clientId,
                 res.getString(R.string.redirect_uri));
         Log.d("[TRY]", "url_authorise=" + url);
         loginWebView.loadUrl(url);

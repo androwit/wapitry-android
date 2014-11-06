@@ -46,6 +46,8 @@ import fr.fitoussoft.wapitry.models.Reflection;
  * Created by emmanuel.fitoussi on 07/10/2014.
  */
 public class WAPIClient {
+    public static boolean DEBUG = true;
+    private Config _config;
 
     private HttpClient _client;
     private String _refreshToken = "";
@@ -60,6 +62,25 @@ public class WAPIClient {
 
         _client = WAPIClient.getNewHttpClient();
         _main = main;
+        Resources res = _main.getResources();
+
+        _config = new Config();
+
+        _config.clientId = res.getString(R.string.client_id);
+        _config.clientSecret = res.getString(R.string.client_secret);
+        _config.wapiAuthorise = res.getString(R.string.wapi_authorise);
+        _config.wapiToken = res.getString(R.string.wapi_token);
+        _config.wapiGetBusinessAcountsMy = res.getString(R.string.wapi_GetBusinessAccountsMy);
+        _config.wapiSearchReflections = res.getString(R.string.wapi_SearchReflections);
+
+        if (DEBUG) {
+            _config.clientId = res.getString(R.string.client_id_beta);
+            _config.clientSecret = res.getString(R.string.client_secret_beta);
+            _config.wapiAuthorise = res.getString(R.string.wapi_authorise_beta);
+            _config.wapiToken = res.getString(R.string.wapi_token_beta);
+            _config.wapiGetBusinessAcountsMy = res.getString(R.string.wapi_GetBusinessAccountsMy_beta);
+            _config.wapiSearchReflections = res.getString(R.string.wapi_SearchReflections_beta);
+        }
 
         // restore stored tokens
         _prefs = _main.getPreferences(Context.MODE_PRIVATE);
@@ -88,6 +109,10 @@ public class WAPIClient {
         } catch (Exception e) {
             return new DefaultHttpClient();
         }
+    }
+
+    public Config getConfig() {
+        return _config;
     }
 
     public boolean hasAccessToken() {
@@ -185,14 +210,14 @@ public class WAPIClient {
         boolean result = false;
         Resources res = _main.getResources();
         List<NameValuePair> pairs = new ArrayList<NameValuePair>();
-        pairs.add(new BasicNameValuePair("client_id", res.getString(R.string.client_id)));
-        pairs.add(new BasicNameValuePair("client_secret", res.getString(R.string.client_secret)));
+        pairs.add(new BasicNameValuePair("client_id", _config.clientId));
+        pairs.add(new BasicNameValuePair("client_secret", _config.clientSecret));
         pairs.add(new BasicNameValuePair("code", code));
         pairs.add(new BasicNameValuePair("grant_type", "authorization_code"));
         pairs.add(new BasicNameValuePair("redirect_uri", res.getString(R.string.redirect_uri)));
 
         try {
-            String responseText = this.post(res.getString(R.string.wapi_token), pairs, false);
+            String responseText = this.post(_config.wapiToken, pairs, false);
             JSONObject json = new JSONObject(responseText);
             _accessToken = json.getString("access_token");
             _refreshToken = json.getString("refresh_token");
@@ -217,15 +242,14 @@ public class WAPIClient {
 
     public boolean refreshAccess() {
         boolean result = false;
-        Resources res = _main.getResources();
         List<NameValuePair> pairs = new ArrayList<NameValuePair>();
-        pairs.add(new BasicNameValuePair("client_id", res.getString(R.string.client_id)));
-        pairs.add(new BasicNameValuePair("client_secret", res.getString(R.string.client_secret)));
+        pairs.add(new BasicNameValuePair("client_id", _config.clientId));
+        pairs.add(new BasicNameValuePair("client_secret", _config.clientSecret));
         pairs.add(new BasicNameValuePair("refresh_token", _refreshToken));
         pairs.add(new BasicNameValuePair("grant_type", "refresh_token"));
 
         try {
-            String responseText = this.post(res.getString(R.string.wapi_token), pairs, false);
+            String responseText = this.post(_config.wapiToken, pairs, false);
             JSONObject json = new JSONObject(responseText);
             _accessToken = json.getString("access_token");
             _refreshToken = json.getString("refresh_token");
@@ -251,8 +275,7 @@ public class WAPIClient {
     public List<Account> requestBusinessAccounts() {
         List<Account> accounts = new ArrayList<Account>();
         try {
-            Resources res = _main.getResources();
-            String responseText = this.get(res.getString(R.string.wapi_GetBusinessAccountsMy), true);
+            String responseText = this.get(_config.wapiGetBusinessAcountsMy, true);
             JSONArray json = new JSONArray(responseText);
             for (int i = 0; i < json.length(); i++) {
                 JSONObject jsonO = (JSONObject) json.get(i);
@@ -272,8 +295,7 @@ public class WAPIClient {
     public List<Reflection> requestReflections(String wac, int skip, int take) {
         List<Reflection> reflections = new ArrayList<Reflection>();
         try {
-            Resources res = _main.getResources();
-            String url = String.format(res.getString(R.string.wapi_SearchReflections), wac, skip, take);
+            String url = String.format(_config.wapiSearchReflections, wac, skip, take);
             String responseText = this.get(url, true);
             JSONObject jsonContainer = new JSONObject(responseText);
             JSONArray json = jsonContainer.getJSONArray("reflections");
@@ -294,8 +316,17 @@ public class WAPIClient {
     public List<Reflection> nextRequestReflections(String wac) {
         int pageSize = 20;
         int newSkip = nextSkip;
-        nextSkip+=pageSize;
+        nextSkip += pageSize;
         return requestReflections(wac, newSkip, pageSize);
+    }
+
+    public class Config {
+        public String clientId;
+        public String clientSecret;
+        public String wapiAuthorise;
+        public String wapiToken;
+        public String wapiGetBusinessAcountsMy;
+        public String wapiSearchReflections;
     }
 
 }

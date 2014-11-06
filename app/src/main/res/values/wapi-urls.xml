@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="client_id">WAPITRY_I4MUJD</string>
+    <string name="client_secret">e05afa60-f88a-46b1-af0c-5995136fa263</string>
+    <string name="wapi_authorise">https://developer.wit-datacenter.com/oauth/authorize?client_id=%1$s&amp;response_type=code&amp;redirect_uri=%2$s&amp;scope=https://api.wit-datacenter.com</string>
+    <string name="wapi_token">https://developer.wit-datacenter.com/oauth/token</string>
+    <string name="wapi_GetBusinessAccountsMy">https://api.wit-datacenter.com/BusinessAccount/My</string>
+    <string name="wapi_SearchReflections">https://api.wit-datacenter.com/%1$s/Reflection?skip=%2$d&amp;take=%3$d</string>
+
+    <!--beta-->
+    <string name="client_id_beta">WAPITRY_LLF212</string>
+    <string name="client_secret_beta">3a0807b2-125e-421c-8ea3-bbf69e368b2d</string>
+    <string name="wapi_authorise_beta">https://beta.wit-datacenter.com/developer/oauth/authorize?client_id=%1$s&amp;response_type=code&amp;redirect_uri=%2$s&amp;scope=https://api.wit-datacenter.com</string>
+    <string name="wapi_token_beta">http://beta.wit-datacenter.com/developer/oauth/token</string>
+    <string name="wapi_GetBusinessAccountsMy_beta">http://beta.wit-datacenter.com/wapi/BusinessAccount/My</string>
+    <string name="wapi_SearchReflections_beta">http://beta.wit-datacenter.com/wapi/%1$s/Reflection?skip=%2$d&amp;take=%3$d</string>
+</resources>
