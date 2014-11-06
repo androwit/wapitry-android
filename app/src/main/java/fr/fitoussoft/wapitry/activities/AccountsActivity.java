@@ -16,9 +16,10 @@ import android.widget.TextView;
 
 import java.util.List;
 
+import fr.fitoussoft.wapisdk.activities.AuthActivity;
+import fr.fitoussoft.wapisdk.helpers.WAPIClient;
+import fr.fitoussoft.wapisdk.models.Account;
 import fr.fitoussoft.wapitry.R;
-import fr.fitoussoft.wapitry.helpers.WAPIClient;
-import fr.fitoussoft.wapitry.models.Account;
 
 public class AccountsActivity extends Activity {
 
@@ -33,7 +34,7 @@ public class AccountsActivity extends Activity {
         setContentView(R.layout.accounts);
 
         if (accounts == null) {
-            WAPIClient client = MainActivity.getClient();
+            WAPIClient client = AuthActivity.getClient();
             if (client.hasToAuthenticate()) {
                 client.navigateToAuth(this);
                 return;
@@ -103,7 +104,7 @@ public class AccountsActivity extends Activity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.option_disconnect) {
-            MainActivity.getClient().disconnect(this);
+            AuthActivity.getClient().disconnect(this);
             return true;
         }
 

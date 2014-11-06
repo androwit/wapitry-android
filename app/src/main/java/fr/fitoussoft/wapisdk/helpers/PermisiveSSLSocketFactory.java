@@ -1,4 +1,4 @@
-package fr.fitoussoft.wapitry.helpers;
+package fr.fitoussoft.wapisdk.helpers;
 
 import org.apache.http.conn.ssl.SSLSocketFactory;
 

@@ -5,16 +5,11 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
+import fr.fitoussoft.wapisdk.activities.AuthActivity;
+import fr.fitoussoft.wapisdk.helpers.WAPIClient;
 import fr.fitoussoft.wapitry.R;
-import fr.fitoussoft.wapitry.helpers.WAPIClient;
 
 public class MainActivity extends Activity {
-
-    private static WAPIClient _client;
-
-    public static WAPIClient getClient() {
-        return _client;
-    }
 
     private void navigateToAccounts() {
         Intent myIntent = new Intent(MainActivity.this, AccountsActivity.class);
@@ -23,12 +18,13 @@ public class MainActivity extends Activity {
     }
 
     private void verifyTokenAndGoHome() {
-        if (MainActivity.getClient().hasRefreshToken()) {
+        WAPIClient client = AuthActivity.setupWAPIClient(this);
+        if (client.hasRefreshToken()) {
             navigateToAccounts();
             return;
         }
 
-        _client.navigateToAuth(this);
+        client.navigateToAuth(this);
     }
 
     @Override
@@ -37,11 +33,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        if (_client == null) {
-            // setups WAPIClient.
-            _client = new WAPIClient(this);
-        }
-
+        AuthActivity.setupWAPIClient(this);
     }
 
     @Override

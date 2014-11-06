@@ -1,4 +1,4 @@
-package fr.fitoussoft.wapitry.models;
+package fr.fitoussoft.wapisdk.models;
 
 import android.util.Log;
 

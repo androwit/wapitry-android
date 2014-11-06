@@ -18,9 +18,10 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
+import fr.fitoussoft.wapisdk.activities.AuthActivity;
+import fr.fitoussoft.wapisdk.helpers.WAPIClient;
+import fr.fitoussoft.wapisdk.models.Reflection;
 import fr.fitoussoft.wapitry.R;
-import fr.fitoussoft.wapitry.helpers.WAPIClient;
-import fr.fitoussoft.wapitry.models.Reflection;
 
 public class ReflectionsActivity extends Activity {
 
@@ -45,7 +46,7 @@ public class ReflectionsActivity extends Activity {
         progressBar.setVisibility(View.INVISIBLE);
 
         if (reflections == null) {
-            WAPIClient client = MainActivity.getClient();
+            WAPIClient client = AuthActivity.getClient();
             if (client.hasToAuthenticate()) {
                 client.navigateToAuth(this);
                 return;
@@ -87,7 +88,7 @@ public class ReflectionsActivity extends Activity {
 
 
         progressBar.setVisibility(View.VISIBLE);
-        MainActivity.getClient().nextSkip = 0;
+        AuthActivity.getClient().nextSkip = 0;
         ReflectionsAsyncTask task = new ReflectionsAsyncTask();
         task.execute(wac);
     }
@@ -106,7 +107,7 @@ public class ReflectionsActivity extends Activity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.option_disconnect) {
-            MainActivity.getClient().disconnect(this);
+            AuthActivity.getClient().disconnect(this);
             return true;
         }
 
@@ -116,7 +117,7 @@ public class ReflectionsActivity extends Activity {
     public class ReflectionsAsyncTask extends AsyncTask<String, Integer, List<Reflection>> {
         @Override
         protected List<Reflection> doInBackground(String... strings) {
-            WAPIClient client = MainActivity.getClient();
+            WAPIClient client = AuthActivity.getClient();
             return client.nextRequestReflections(strings[0]);
         }
 

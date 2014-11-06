@@ -1,4 +1,4 @@
-package fr.fitoussoft.wapitry.helpers;
+package fr.fitoussoft.wapisdk.helpers;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -44,10 +44,11 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import fr.fitoussoft.wapisdk.activities.AuthActivity;
+import fr.fitoussoft.wapisdk.models.Account;
+import fr.fitoussoft.wapisdk.models.Reflection;
 import fr.fitoussoft.wapitry.R;
-import fr.fitoussoft.wapitry.activities.AuthActivity;
-import fr.fitoussoft.wapitry.models.Account;
-import fr.fitoussoft.wapitry.models.Reflection;
+
 
 /**
  * Created by emmanuel.fitoussi on 07/10/2014.
@@ -61,16 +62,16 @@ public class WAPIClient {
     private String _refreshToken = "";
     private String _accessToken = "";
     private Calendar _expireDate;
-    private Activity _main;
+    private Activity _mainActivity;
     private SharedPreferences _prefs;
 
-    public WAPIClient(Activity main) {
+    public WAPIClient(Activity mainActivity) {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().detectAll().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
         _client = WAPIClient.getNewHttpClient();
-        _main = main;
-        Resources res = _main.getResources();
+        _mainActivity = mainActivity;
+        Resources res = _mainActivity.getResources();
 
         _config = new Config();
 
@@ -91,7 +92,7 @@ public class WAPIClient {
         }
 
         // restore stored tokens
-        _prefs = _main.getPreferences(Context.MODE_PRIVATE);
+        _prefs = _mainActivity.getPreferences(Context.MODE_PRIVATE);
         this.loadTokens();
     }
 
@@ -121,7 +122,7 @@ public class WAPIClient {
     }
 
     public Activity getMainActivity() {
-        return _main;
+        return _mainActivity;
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -139,7 +140,7 @@ public class WAPIClient {
                 }
             });
         } else {
-            CookieSyncManager.createInstance(_main);
+            CookieSyncManager.createInstance(_mainActivity);
             CookieManager cookieManager = CookieManager.getInstance();
             cookieManager.removeAllCookie();
             this.navigateToAuth(activity);
@@ -252,7 +253,7 @@ public class WAPIClient {
 
     public boolean requestAccess(String code) {
         boolean result = false;
-        Resources res = _main.getResources();
+        Resources res = _mainActivity.getResources();
         List<NameValuePair> pairs = new ArrayList<NameValuePair>();
         pairs.add(new BasicNameValuePair("client_id", _config.clientId));
         pairs.add(new BasicNameValuePair("client_secret", _config.clientSecret));

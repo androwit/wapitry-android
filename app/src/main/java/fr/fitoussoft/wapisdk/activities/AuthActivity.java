@@ -1,4 +1,4 @@
-package fr.fitoussoft.wapitry.activities;
+package fr.fitoussoft.wapisdk.activities;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -16,18 +16,32 @@ import android.webkit.WebViewClient;
 
 import java.io.UnsupportedEncodingException;
 
+import fr.fitoussoft.wapisdk.helpers.WAPIClient;
 import fr.fitoussoft.wapitry.R;
-import fr.fitoussoft.wapitry.helpers.WAPIClient;
 
 public class AuthActivity extends Activity {
 
 
+    private static WAPIClient _client;
     private WebView loginWebView;
     private WebViewClient loginWebViewClient;
     private AsyncTask<String, Integer, Boolean> requestAccessTask;
 
+    public static WAPIClient getClient() {
+        return _client;
+    }
+
+    public static WAPIClient setupWAPIClient(Activity mainActivity) {
+        if (_client == null) {
+            // setups WAPIClient.
+            _client = new WAPIClient(mainActivity);
+        }
+
+        return _client;
+    }
+
     public void navigateToMain() {
-        Intent myIntent = new Intent(this, MainActivity.class);
+        Intent myIntent = new Intent(this, getClient().getMainActivity().getClass());
         this.startActivity(myIntent);
     }
 
@@ -35,7 +49,7 @@ public class AuthActivity extends Activity {
         return new AsyncTask<String, Integer, Boolean>() {
             @Override
             protected Boolean doInBackground(String... strings) {
-                WAPIClient client = MainActivity.getClient();
+                WAPIClient client = getClient();
                 return client.requestAccess(strings[0]);
             }
 
@@ -98,7 +112,7 @@ public class AuthActivity extends Activity {
 
     private void authenticate() {
         Resources res = getResources();
-        WAPIClient client = MainActivity.getClient();
+        WAPIClient client = getClient();
         String url = String.format(client.getConfig().wapiAuthorise,
                 client.getConfig().clientId,
                 res.getString(R.string.redirect_uri));
@@ -140,5 +154,4 @@ public class AuthActivity extends Activity {
         Log.d("[TRY]", "Auth onResume.");
         super.onResume();
     }
-
 }

@@ -5,4 +5,7 @@
         <!-- Customize your theme here. -->
     </style>
 
+    <style name="progressBarStyle" parent="android:style/Widget.Holo.Light.ProgressBar.Large">
+
+    </style>
 </resources>

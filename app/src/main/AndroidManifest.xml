@@ -24,7 +24,7 @@
             android:parentActivityName=".activities.MainActivity" >
         </activity>
         <activity
-            android:name=".activities.AuthActivity"
+            android:name="fr.fitoussoft.wapisdk.activities.AuthActivity"
             android:label="@string/title_activity_auth" >
         </activity>
         <activity

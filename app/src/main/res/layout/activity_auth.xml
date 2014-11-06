@@ -2,10 +2,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="fr.fitoussoft.wapitry.activities.AuthActivity">
+    tools:context="fr.fitoussoft.wapisdk.activities.AuthActivity">
 
     <ProgressBar
-        style="?android:attr/progressBarStyleLarge"
+        style="@style/progressBarStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/progressBar"
