@@ -47,7 +47,7 @@ import java.util.List;
 import fr.fitoussoft.wapisdk.activities.AuthActivity;
 import fr.fitoussoft.wapisdk.models.Account;
 import fr.fitoussoft.wapisdk.models.Reflection;
-import fr.fitoussoft.wapitry.R;
+import fr.fitoussoft.wapisdk.R;
 
 
 /**

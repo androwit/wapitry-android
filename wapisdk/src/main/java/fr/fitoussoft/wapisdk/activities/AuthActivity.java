@@ -17,7 +17,7 @@ import android.webkit.WebViewClient;
 import java.io.UnsupportedEncodingException;
 
 import fr.fitoussoft.wapisdk.helpers.WAPIClient;
-import fr.fitoussoft.wapitry.R;
+import fr.fitoussoft.wapisdk.R;
 
 public class AuthActivity extends Activity {
 
