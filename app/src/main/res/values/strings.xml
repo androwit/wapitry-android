@@ -4,7 +4,7 @@
     <string name="app_name">WAPI Try</string>
     <string name="redirect_uri">http://localhost</string>
     <string name="title_activity_accounts">Comptes</string>
-    <string name="title_activity_auth">Authentification</string>
+    <string name="title_activity_auth">Identification</string>
     <string name="caption_disconnect">Déconnecter</string>
     <string name="title_activity_reflections">Reflets</string>
     <string name="hello_world">Hello world!</string>
