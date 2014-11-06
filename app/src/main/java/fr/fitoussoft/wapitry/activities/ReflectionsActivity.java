@@ -1,7 +1,6 @@
 package fr.fitoussoft.wapitry.activities;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -31,12 +30,6 @@ public class ReflectionsActivity extends Activity {
     private ProgressBar progressBar;
     private boolean loading = true;
 
-    private void navigateToAuth() {
-        Intent myIntent = new Intent(ReflectionsActivity.this, AuthActivity.class);
-        //myIntent.putExtra("key", value); //Optional parameters
-        ReflectionsActivity.this.startActivity(myIntent);
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d("[TRY]", "Reflections onCreate.");
@@ -53,12 +46,11 @@ public class ReflectionsActivity extends Activity {
 
         if (reflections == null) {
             WAPIClient client = MainActivity.getClient();
-            if (!client.hasAccessToken() && client.hasExpired() && (!client.hasRefreshToken() || !client.refreshAccess())) {
-                navigateToAuth();
+            if (client.hasToAuthenticate()) {
+                client.navigateToAuth(this);
                 return;
             }
 
-            //reflections = client.requestReflections(wac);
             reflections = new ArrayList<Reflection>();
         }
 
@@ -113,9 +105,11 @@ public class ReflectionsActivity extends Activity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
+        if (id == R.id.option_disconnect) {
+            MainActivity.getClient().disconnect(this);
             return true;
         }
+
         return super.onOptionsItemSelected(item);
     }
 

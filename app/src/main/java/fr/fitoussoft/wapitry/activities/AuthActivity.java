@@ -24,16 +24,15 @@ public class AuthActivity extends Activity {
 
     private WebView loginWebView;
     private WebViewClient loginWebViewClient;
-    private AsyncTask<String,Integer,Boolean> requestAccessTask;
+    private AsyncTask<String, Integer, Boolean> requestAccessTask;
 
     public void navigateToMain() {
-        Intent myIntent = new Intent(AuthActivity.this, MainActivity.class);
-        //myIntent.putExtra("key", value); //Optional parameters
-        AuthActivity.this.startActivity(myIntent);
+        Intent myIntent = new Intent(this, MainActivity.class);
+        this.startActivity(myIntent);
     }
 
-    private AsyncTask<String,Integer,Boolean> createRequestAsyncTask() {
-        return new AsyncTask<String,Integer,Boolean>() {
+    private AsyncTask<String, Integer, Boolean> createRequestAsyncTask() {
+        return new AsyncTask<String, Integer, Boolean>() {
             @Override
             protected Boolean doInBackground(String... strings) {
                 WAPIClient client = MainActivity.getClient();
@@ -42,7 +41,7 @@ public class AuthActivity extends Activity {
 
             @Override
             protected void onPostExecute(Boolean aBoolean) {
-                if(aBoolean) {
+                if (aBoolean) {
                     navigateToMain();
                 }
             }
@@ -128,7 +127,7 @@ public class AuthActivity extends Activity {
             loginWebView.getSettings().setJavaScriptEnabled(true);
         }
 
-        if(requestAccessTask == null) {
+        if (requestAccessTask == null) {
             requestAccessTask = createRequestAsyncTask();
         }
 

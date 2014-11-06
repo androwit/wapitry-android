@@ -1,11 +1,18 @@
 package fr.fitoussoft.wapitry.helpers;
 
+import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.net.ParseException;
+import android.os.Build;
 import android.os.StrictMode;
 import android.util.Log;
+import android.webkit.CookieManager;
+import android.webkit.CookieSyncManager;
+import android.webkit.ValueCallback;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
@@ -38,7 +45,7 @@ import java.util.Calendar;
 import java.util.List;
 
 import fr.fitoussoft.wapitry.R;
-import fr.fitoussoft.wapitry.activities.MainActivity;
+import fr.fitoussoft.wapitry.activities.AuthActivity;
 import fr.fitoussoft.wapitry.models.Account;
 import fr.fitoussoft.wapitry.models.Reflection;
 
@@ -46,17 +53,18 @@ import fr.fitoussoft.wapitry.models.Reflection;
  * Created by emmanuel.fitoussi on 07/10/2014.
  */
 public class WAPIClient {
-    public static boolean DEBUG = true;
+    public static boolean DEBUG = false;
+    public int nextSkip = 0;
     private Config _config;
 
     private HttpClient _client;
     private String _refreshToken = "";
     private String _accessToken = "";
     private Calendar _expireDate;
-    private MainActivity _main;
+    private Activity _main;
     private SharedPreferences _prefs;
 
-    public WAPIClient(MainActivity main) {
+    public WAPIClient(Activity main) {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().detectAll().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
@@ -99,6 +107,7 @@ public class WAPIClient {
             HttpProtocolParams.setVersion(params, HttpVersion.HTTP_1_1);
             HttpProtocolParams.setContentCharset(params, HTTP.UTF_8);
 
+
             SchemeRegistry registry = new SchemeRegistry();
             registry.register(new Scheme("http", PlainSocketFactory.getSocketFactory(), 80));
             registry.register(new Scheme("https", sf, 443));
@@ -109,6 +118,37 @@ public class WAPIClient {
         } catch (Exception e) {
             return new DefaultHttpClient();
         }
+    }
+
+    public Activity getMainActivity() {
+        return _main;
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public void disconnect(final Activity activity) {
+        Log.d("[TRY]", "disconnect.");
+        this.resetTokens();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            CookieManager cookieManager = CookieManager.getInstance();
+            cookieManager.flush();
+            cookieManager.removeAllCookies(new ValueCallback<Boolean>() {
+
+                @Override
+                public void onReceiveValue(Boolean aBoolean) {
+                    WAPIClient.this.navigateToAuth(activity);
+                }
+            });
+        } else {
+            CookieSyncManager.createInstance(_main);
+            CookieManager cookieManager = CookieManager.getInstance();
+            cookieManager.removeAllCookie();
+            this.navigateToAuth(activity);
+        }
+    }
+
+    public void navigateToAuth(Activity activity) {
+        Intent myIntent = new Intent(activity, AuthActivity.class);
+        activity.startActivity(myIntent);
     }
 
     public Config getConfig() {
@@ -125,6 +165,10 @@ public class WAPIClient {
 
     public boolean hasExpired() {
         return _expireDate == null || _expireDate.getTimeInMillis() <= Calendar.getInstance().getTimeInMillis();
+    }
+
+    public boolean hasToAuthenticate() {
+        return !this.hasAccessToken() && this.hasExpired() && (!this.hasRefreshToken() || !this.refreshAccess());
     }
 
     public String get(String url, boolean withAccessToken) {
@@ -291,7 +335,6 @@ public class WAPIClient {
         return accounts;
     }
 
-    public int nextSkip = 0;
     public List<Reflection> requestReflections(String wac, int skip, int take) {
         List<Reflection> reflections = new ArrayList<Reflection>();
         try {

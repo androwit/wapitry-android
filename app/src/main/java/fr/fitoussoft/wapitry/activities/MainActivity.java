@@ -22,19 +22,13 @@ public class MainActivity extends Activity {
         MainActivity.this.startActivity(myIntent);
     }
 
-    private void navigateToAuth() {
-        Intent myIntent = new Intent(MainActivity.this, AuthActivity.class);
-        //myIntent.putExtra("key", value); //Optional parameters
-        MainActivity.this.startActivity(myIntent);
-    }
-
     private void verifyTokenAndGoHome() {
-        if(MainActivity.getClient().hasRefreshToken()) {
+        if (MainActivity.getClient().hasRefreshToken()) {
             navigateToAccounts();
             return;
         }
 
-        this.navigateToAuth();
+        _client.navigateToAuth(this);
     }
 
     @Override

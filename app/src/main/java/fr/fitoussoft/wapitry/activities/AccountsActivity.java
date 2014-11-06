@@ -9,8 +9,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.CookieManager;
-import android.webkit.CookieSyncManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -28,21 +26,6 @@ public class AccountsActivity extends Activity {
 
     private ArrayAdapter<Account> accountsAdapter;
 
-    private void disconnect() {
-        Log.d("[TRY]", "disconnect.");
-        MainActivity.getClient().resetTokens();
-        CookieSyncManager.createInstance(this);
-        CookieManager cookieManager = CookieManager.getInstance();
-        cookieManager.removeAllCookie();
-        this.navigateToAuth();
-    }
-
-    private void navigateToAuth() {
-        Intent myIntent = new Intent(AccountsActivity.this, AuthActivity.class);
-        //myIntent.putExtra("key", value); //Optional parameters
-        AccountsActivity.this.startActivity(myIntent);
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d("[TRY]", "Accounts onCreate.");
@@ -51,8 +34,8 @@ public class AccountsActivity extends Activity {
 
         if (accounts == null) {
             WAPIClient client = MainActivity.getClient();
-            if ((!client.hasAccessToken() || client.hasExpired()) && (!client.hasRefreshToken() || !client.refreshAccess())) {
-                navigateToAuth();
+            if (client.hasToAuthenticate()) {
+                client.navigateToAuth(this);
                 return;
             }
 
@@ -120,7 +103,7 @@ public class AccountsActivity extends Activity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.option_disconnect) {
-            this.disconnect();
+            MainActivity.getClient().disconnect(this);
             return true;
         }
 
