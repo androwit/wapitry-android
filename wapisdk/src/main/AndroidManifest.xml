@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="fr.fitoussoft.wapisdk" >
 
-    <application
+    <library
         android:allowBackup="true" >
         <activity
             android:name="fr.fitoussoft.wapisdk.activities.AuthActivity"
@@ -13,6 +13,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-    </application>
+    </library>
 
 </manifest>
