@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.ParseException;
 import android.os.Build;
 import android.os.StrictMode;
@@ -80,6 +82,7 @@ public class WAPIClient {
         _config.wapiToken = res.getString(R.string.wapi_token);
         _config.wapiGetBusinessAcountsMy = res.getString(R.string.wapi_GetBusinessAccountsMy);
         _config.wapiSearchReflections = res.getString(R.string.wapi_SearchReflections);
+        _config.wapiLoadPicture = res.getString(R.string.wapi_LoadPicture);
 
         if (DEBUG) {
             _config.clientId = res.getString(R.string.client_id_beta);
@@ -88,6 +91,7 @@ public class WAPIClient {
             _config.wapiToken = res.getString(R.string.wapi_token_beta);
             _config.wapiGetBusinessAcountsMy = res.getString(R.string.wapi_GetBusinessAccountsMy_beta);
             _config.wapiSearchReflections = res.getString(R.string.wapi_SearchReflections_beta);
+            _config.wapiLoadPicture = res.getString(R.string.wapi_LoadPicture_beta);
         }
 
         // restore stored tokens
@@ -194,6 +198,29 @@ public class WAPIClient {
 
         Log.d(responseText);
         return responseText;
+    }
+
+    public byte[] getByteArray(String url, boolean withAccessToken) {
+        Log.d("GET " + url + ", with accessToken: " + withAccessToken);
+        HttpGet get = new HttpGet(url);
+        byte[] responseArray = null;
+        try {
+
+            if (withAccessToken) {
+                get.addHeader("Authorization", "Bearer " + _accessToken);
+            }
+
+            HttpResponse response = _client.execute(get);
+            responseArray = EntityUtils.toByteArray(response.getEntity());
+        } catch (ParseException e) {
+            Log.e("Parse Exception " + e + "");
+        } catch (IOException e) {
+            Log.e("IO Exception " + e + "");
+        } catch (Exception e) {
+            Log.e("Unknown Exception " + e + "");
+        }
+
+        return responseArray;
     }
 
     public String post(String url, List<NameValuePair> pairs, boolean withAccessToken) {
@@ -322,9 +349,19 @@ public class WAPIClient {
         try {
             String responseText = this.get(_config.wapiGetBusinessAcountsMy, true);
             JSONArray json = new JSONArray(responseText);
+            Account account;
+            Resources res = _mainActivity.getResources();
             for (int i = 0; i < json.length(); i++) {
                 JSONObject jsonO = (JSONObject) json.get(i);
-                accounts.add(new Account(jsonO));
+                account = new Account(jsonO);
+                byte[] pictureBytes = requestPicture(account.getPictureId(), res.getString(R.string.icon_size));
+                account.setPictureBytes(pictureBytes);
+
+                Bitmap picture = BitmapFactory.decodeByteArray(pictureBytes, 0, pictureBytes.length);
+                account.setPicture(picture);
+
+                accounts.add(account);
+
             }
             Log.d("json=" + json);
         } catch (ParseException e) {
@@ -357,6 +394,23 @@ public class WAPIClient {
         return reflections;
     }
 
+
+    public byte[] requestPicture(String id, String size) {
+        byte[] pictureBytes = null;
+        try {
+            String url = String.format(_config.wapiLoadPicture, id, size);
+            Log.d("url: "+ url);
+            pictureBytes = this.getByteArray(url, true);
+            Log.d("pictureBytes=" + pictureBytes);
+        } catch (ParseException e) {
+            Log.e("Parse Exception " + e + "");
+        } catch (Exception e) {
+            Log.e("Unknown Exception " + e + "");
+        }
+
+        return pictureBytes;
+    }
+
     public List<Reflection> nextRequestReflections(String wac) {
         int pageSize = 20;
         int newSkip = nextSkip;
@@ -371,6 +425,7 @@ public class WAPIClient {
         public String wapiToken;
         public String wapiGetBusinessAcountsMy;
         public String wapiSearchReflections;
+        public String wapiLoadPicture;
     }
 
 }

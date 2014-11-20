@@ -10,19 +10,19 @@ import fr.fitoussoft.wapisdk.helpers.Log;
  */
 public class Reflection extends Model {
 
+    public String className;
+
+    public Reflection(JSONObject json) {
+        super(json);
+    }
+
     public String getClassName() {
         return className;
     }
 
-    public String className;
-
-    public Reflection(int id, String name, String className) {
-        super(id, name);
-        this.className = className;
-    }
-
-    public Reflection(JSONObject json) {
-        super(json);
+    @Override
+    protected void parse(JSONObject json) {
+        super.parse(json);
         try {
             this.className = json.getString("class");
         } catch (JSONException e) {

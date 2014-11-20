@@ -1,5 +1,6 @@
 package fr.fitoussoft.wapisdk.models;
 
+import android.graphics.Bitmap;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -12,16 +13,18 @@ import fr.fitoussoft.wapisdk.helpers.Log;
 public class Account extends Model {
 
     private String pictureId;
+    private byte[] pictureBytes;
+    private Bitmap picture;
     private String wac;
-
-    public Account(Integer id, String name, String pictureId, String wac) {
-        super(id, name);
-        this.pictureId = pictureId;
-        this.wac = wac;
-    }
 
     public Account(JSONObject json) {
         super(json);
+    }
+
+    @Override
+    protected void parse(JSONObject json) {
+        super.parse(json);
+
         try {
             pictureId = json.getString("picture");
             wac = json.getString("wac");
@@ -36,6 +39,22 @@ public class Account extends Model {
 
     public String getPictureId() {
         return pictureId;
+    }
+
+    public byte[] getPictureBytes() {
+        return pictureBytes;
+    }
+
+    public void setPictureBytes(byte[] bytes) {
+        pictureBytes = bytes;
+    }
+
+    public Bitmap getPicture() {
+        return picture;
+    }
+
+    public void setPicture(Bitmap picture) {
+        this.picture = picture;
     }
 
 }

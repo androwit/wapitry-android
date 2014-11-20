@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -59,10 +60,12 @@ public class AccountsActivity extends Activity {
                     // Lookup view for data population
                     TextView tvName = (TextView) convertView.findViewById(R.id.name);
                     TextView tvWac = (TextView) convertView.findViewById(R.id.wac);
+                    ImageView ivPicture = (ImageView) convertView.findViewById(R.id.picture);
 
                     // Populate the data into the template view using the data object
                     tvName.setText(account.getName());
                     tvWac.setText(account.getWac());
+                    ivPicture.setImageBitmap(account.getPicture());
 
                     // Return the completed view to render on screen
                     return convertView;

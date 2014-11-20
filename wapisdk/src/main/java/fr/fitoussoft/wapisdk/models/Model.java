@@ -12,12 +12,15 @@ public class Model {
     private Integer id;
     private String name;
 
-    public Model(Integer id, String name) {
-        this.id = id;
-        this.name = name;
+    public Model() {
+
     }
 
-    public Model(JSONObject json) {
+    public Model (JSONObject json) {
+        parse(json);
+    }
+
+    protected void parse(JSONObject json) {
         try {
             this.id = json.getInt("id");
             this.name = json.getString("name");

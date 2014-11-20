@@ -3,5 +3,6 @@
 
     <string name="redirect_uri">http://localhost</string>
     <string name="title_activity_auth">Identification</string>
+    <string name="icon_size">Medium</string>
 
 </resources>
