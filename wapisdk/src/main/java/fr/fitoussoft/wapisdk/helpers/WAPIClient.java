@@ -129,7 +129,7 @@ public class WAPIClient {
     public void disconnect(final Activity activity) {
         Log.d("[TRY]", "disconnect.");
         this.resetTokens();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
             CookieManager cookieManager = CookieManager.getInstance();
             cookieManager.flush();
             cookieManager.removeAllCookies(new ValueCallback<Boolean>() {
