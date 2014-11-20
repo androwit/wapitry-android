@@ -9,7 +9,6 @@ import android.content.res.Resources;
 import android.net.ParseException;
 import android.os.Build;
 import android.os.StrictMode;
-import android.util.Log;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
 import android.webkit.ValueCallback;
@@ -44,17 +43,17 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import fr.fitoussoft.wapisdk.R;
 import fr.fitoussoft.wapisdk.activities.AuthActivity;
 import fr.fitoussoft.wapisdk.models.Account;
 import fr.fitoussoft.wapisdk.models.Reflection;
-import fr.fitoussoft.wapisdk.R;
 
 
 /**
  * Created by emmanuel.fitoussi on 07/10/2014.
  */
 public class WAPIClient {
-    public static boolean DEBUG = false;
+    public static boolean DEBUG = true;
     public int nextSkip = 0;
     private Config _config;
 
@@ -127,8 +126,9 @@ public class WAPIClient {
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public void disconnect(final Activity activity) {
-        Log.d("[TRY]", "disconnect.");
+        Log.d("disconnect.");
         this.resetTokens();
+        Log.d("SDK: " + Build.VERSION.SDK_INT + ", JELLY BEAN: " + Build.VERSION_CODES.KITKAT);
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
             CookieManager cookieManager = CookieManager.getInstance();
             cookieManager.flush();
@@ -173,7 +173,7 @@ public class WAPIClient {
     }
 
     public String get(String url, boolean withAccessToken) {
-        Log.d("[TRY]", "GET " + url + ", with accessToken: " + withAccessToken);
+        Log.d("GET " + url + ", with accessToken: " + withAccessToken);
         HttpGet get = new HttpGet(url);
         String responseText = null;
         try {
@@ -185,19 +185,19 @@ public class WAPIClient {
             HttpResponse response = _client.execute(get);
             responseText = EntityUtils.toString(response.getEntity());
         } catch (ParseException e) {
-            Log.e("[TRY]", "Parse Exception " + e + "");
+            Log.e("Parse Exception " + e + "");
         } catch (IOException e) {
-            Log.e("[TRY]", "IO Exception " + e + "");
+            Log.e("IO Exception " + e + "");
         } catch (Exception e) {
-            Log.e("[TRY]", "Unknown Exception " + e + "");
+            Log.e("Unknown Exception " + e + "");
         }
 
-        Log.d("[TRY]", responseText);
+        Log.d(responseText);
         return responseText;
     }
 
     public String post(String url, List<NameValuePair> pairs, boolean withAccessToken) {
-        Log.d("[TRY]", "POST " + url + ", with accessToken: " + withAccessToken);
+        Log.d("POST " + url + ", with accessToken: " + withAccessToken);
         HttpPost post = new HttpPost(url);
         String responseText = null;
         try {
@@ -212,14 +212,14 @@ public class WAPIClient {
             HttpResponse response = _client.execute(post);
             responseText = EntityUtils.toString(response.getEntity());
         } catch (ParseException e) {
-            Log.e("[TRY]", "Parse Exception " + e + "");
+            Log.e("Parse Exception " + e + "");
         } catch (IOException e) {
-            Log.e("[TRY]", "IO Exception " + e + "");
+            Log.e("IO Exception " + e + "");
         } catch (Exception e) {
-            Log.e("[TRY]", "Unknown Exception " + e + "");
+            Log.e("Unknown Exception " + e + "");
         }
 
-        Log.d("[TRY]", responseText);
+        Log.d(responseText);
         return responseText;
     }
 
@@ -271,15 +271,15 @@ public class WAPIClient {
 
             this.saveTokens();
 
-            Log.d("[TRY]", "accessToken=" + _accessToken);
-            Log.d("[TRY]", "refreshToken=" + _refreshToken);
+            Log.d("accessToken=" + _accessToken);
+            Log.d("refreshToken=" + _refreshToken);
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            Log.d("[TRY]", "expires=" + sdf.format(_expireDate.getTime()));
+            Log.d("expires=" + sdf.format(_expireDate.getTime()));
             result = true;
         } catch (ParseException e) {
-            Log.e("[TRY]", "Parse Exception " + e + "");
+            Log.e("Parse Exception " + e + "");
         } catch (Exception e) {
-            Log.e("[TRY]", "Unknown Exception " + e + "");
+            Log.e("Unknown Exception " + e + "");
         }
 
         return result;
@@ -303,15 +303,15 @@ public class WAPIClient {
 
             this.saveTokens();
 
-            Log.d("[TRY]", "accessToken=" + _accessToken);
-            Log.d("[TRY]", "refreshToken=" + _refreshToken);
+            Log.d("accessToken=" + _accessToken);
+            Log.d("refreshToken=" + _refreshToken);
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            Log.d("[TRY]", "expires=" + sdf.format(_expireDate.getTime()));
+            Log.d("expires=" + sdf.format(_expireDate.getTime()));
             result = true;
         } catch (ParseException e) {
-            Log.e("[TRY]", "Parse Exception " + e + "");
+            Log.e("Parse Exception " + e + "");
         } catch (Exception e) {
-            Log.e("[TRY]", "Unknown Exception " + e + "");
+            Log.e("Unknown Exception " + e + "");
         }
 
         return result;
@@ -326,11 +326,11 @@ public class WAPIClient {
                 JSONObject jsonO = (JSONObject) json.get(i);
                 accounts.add(new Account(jsonO));
             }
-            Log.d("[TRY]", "json=" + json);
+            Log.d("json=" + json);
         } catch (ParseException e) {
-            Log.e("[TRY]", "Parse Exception " + e + "");
+            Log.e("Parse Exception " + e + "");
         } catch (Exception e) {
-            Log.e("[TRY]", "Unknown Exception " + e + "");
+            Log.e("Unknown Exception " + e + "");
         }
 
         return accounts;
@@ -347,11 +347,11 @@ public class WAPIClient {
                 JSONObject jsonO = (JSONObject) json.get(i);
                 reflections.add(new Reflection(jsonO));
             }
-            Log.d("[TRY]", "json=" + json);
+            Log.d("json=" + json);
         } catch (ParseException e) {
-            Log.e("[TRY]", "Parse Exception " + e + "");
+            Log.e("Parse Exception " + e + "");
         } catch (Exception e) {
-            Log.e("[TRY]", "Unknown Exception " + e + "");
+            Log.e("Unknown Exception " + e + "");
         }
 
         return reflections;

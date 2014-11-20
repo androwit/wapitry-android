@@ -1,9 +1,9 @@
 package fr.fitoussoft.wapisdk.models;
 
-import android.util.Log;
-
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import fr.fitoussoft.wapisdk.helpers.Log;
 
 /**
  * Created by emmanuel.fitoussi on 15/10/2014.
@@ -26,7 +26,7 @@ public class Reflection extends Model {
         try {
             this.className = json.getString("class");
         } catch (JSONException e) {
-            Log.d("[TRY]", String.format("error during parse of %s.", Reflection.class));
+            Log.d(String.format("error during parse of %s.", Reflection.class));
         }
     }
 }

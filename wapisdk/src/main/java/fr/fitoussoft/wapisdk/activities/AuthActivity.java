@@ -7,7 +7,6 @@ import android.content.res.Resources;
 import android.net.http.SslError;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebSettings;
@@ -16,8 +15,9 @@ import android.webkit.WebViewClient;
 
 import java.io.UnsupportedEncodingException;
 
-import fr.fitoussoft.wapisdk.helpers.WAPIClient;
 import fr.fitoussoft.wapisdk.R;
+import fr.fitoussoft.wapisdk.helpers.Log;
+import fr.fitoussoft.wapisdk.helpers.WAPIClient;
 
 public class AuthActivity extends Activity {
 
@@ -86,16 +86,17 @@ public class AuthActivity extends Activity {
                     }
                 }
 
-                Log.d("[TRY]", "code=" + code);
+                Log.d("code=" + code);
                 return code;
             }
 
+
             @Override
             public void onPageFinished(WebView view, String url) {
-                Log.d("[TRY]", "page loaded with url: " + url);
+                Log.d("page loaded with url: " + url);
                 String code = this.extractCodeFromURL(url);
                 if (code == null) {
-                    Log.d("[TRY]", "code not found.");
+                    Log.d("code not found.");
                     view.setVisibility(View.VISIBLE);
                     super.onPageFinished(view, url);
                     return;
@@ -116,16 +117,23 @@ public class AuthActivity extends Activity {
         String url = String.format(client.getConfig().wapiAuthorise,
                 client.getConfig().clientId,
                 res.getString(R.string.redirect_uri));
-        Log.d("[TRY]", "url_authorise=" + url);
+        Log.d("url_authorise=" + url);
         loginWebView.loadUrl(url);
     }
 
     @Override
-    @SuppressLint("SetJavaScriptEnabled")
     protected void onCreate(Bundle savedInstanceState) {
-        Log.d("[TRY]", "Auth onCreate.");
+        Log.d("Auth onCreate.");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_auth);
+    }
+
+
+    @SuppressLint("SetJavaScriptEnabled")
+    @Override
+    protected void onResume() {
+        Log.d("Auth onResume.");
+
 
         // setup.
         if (loginWebView == null) {
@@ -139,6 +147,7 @@ public class AuthActivity extends Activity {
 
             ws.setSaveFormData(false);
             loginWebView.getSettings().setJavaScriptEnabled(true);
+
         }
 
         if (requestAccessTask == null) {
@@ -146,12 +155,8 @@ public class AuthActivity extends Activity {
         }
 
         authenticate();
-    }
 
 
-    @Override
-    protected void onResume() {
-        Log.d("[TRY]", "Auth onResume.");
         super.onResume();
     }
 }

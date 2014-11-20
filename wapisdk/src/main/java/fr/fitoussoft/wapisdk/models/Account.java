@@ -1,9 +1,10 @@
 package fr.fitoussoft.wapisdk.models;
 
-import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import fr.fitoussoft.wapisdk.helpers.Log;
 
 /**
  * Created by emmanuel.fitoussi on 07/10/2014.
@@ -25,7 +26,7 @@ public class Account extends Model {
             pictureId = json.getString("picture");
             wac = json.getString("wac");
         } catch (JSONException e) {
-            Log.d("[TRY]", String.format("error during parse of %s.", Account.class.toString()));
+            Log.d(String.format("error during parse of %s.", Account.class.toString()));
         }
     }
 
