@@ -169,7 +169,7 @@ public class WAPIClient {
     }
 
     public boolean hasToAuthenticate() {
-        return !this.hasAccessToken() && this.hasExpired() && (!this.hasRefreshToken() || !this.refreshAccess());
+        return !this.hasAccessToken() || this.hasExpired() && (!this.hasRefreshToken() || !this.refreshAccess());
     }
 
     public String get(String url, boolean withAccessToken) {
