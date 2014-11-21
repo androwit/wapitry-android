@@ -37,7 +37,7 @@ public class AccountsActivity extends Activity {
         if (accounts == null) {
             WAPIClient client = AuthActivity.getClient();
             if (client.hasToAuthenticate()) {
-                client.navigateToAuth(this);
+                WAPIClient.navigateToAuth(this);
                 return;
             }
 

@@ -48,7 +48,7 @@ public class ReflectionsActivity extends Activity {
         if (reflections == null) {
             WAPIClient client = AuthActivity.getClient();
             if (client.hasToAuthenticate()) {
-                client.navigateToAuth(this);
+                WAPIClient.navigateToAuth(this);
                 return;
             }
 

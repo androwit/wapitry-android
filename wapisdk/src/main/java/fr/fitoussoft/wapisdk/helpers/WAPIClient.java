@@ -63,16 +63,16 @@ public class WAPIClient {
     private String _refreshToken = "";
     private String _accessToken = "";
     private Calendar _expireDate;
-    private Activity _mainActivity;
+    private Context _context;
     private SharedPreferences _prefs;
 
-    public WAPIClient(Activity mainActivity) {
+    public WAPIClient(Context context, SharedPreferences prefs) {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().detectAll().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
         _client = WAPIClient.getNewHttpClient();
-        _mainActivity = mainActivity;
-        Resources res = _mainActivity.getResources();
+        _context = context;
+        Resources res = _context.getResources();
 
         _config = new Config();
 
@@ -95,7 +95,7 @@ public class WAPIClient {
         }
 
         // restore stored tokens
-        _prefs = _mainActivity.getPreferences(Context.MODE_PRIVATE);
+        _prefs = prefs;
         this.loadTokens();
     }
 
@@ -124,8 +124,9 @@ public class WAPIClient {
         }
     }
 
-    public Activity getMainActivity() {
-        return _mainActivity;
+    public static void navigateToAuth(Activity activity) {
+        Intent myIntent = new Intent(activity, AuthActivity.class);
+        activity.startActivityForResult(myIntent, 0);
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -140,20 +141,15 @@ public class WAPIClient {
 
                 @Override
                 public void onReceiveValue(Boolean aBoolean) {
-                    WAPIClient.this.navigateToAuth(activity);
+                    WAPIClient.navigateToAuth(activity);
                 }
             });
         } else {
-            CookieSyncManager.createInstance(_mainActivity);
+            CookieSyncManager.createInstance(_context);
             CookieManager cookieManager = CookieManager.getInstance();
             cookieManager.removeAllCookie();
-            this.navigateToAuth(activity);
+            WAPIClient.navigateToAuth(activity);
         }
-    }
-
-    public void navigateToAuth(Activity activity) {
-        Intent myIntent = new Intent(activity, AuthActivity.class);
-        activity.startActivity(myIntent);
     }
 
     public Config getConfig() {
@@ -280,7 +276,7 @@ public class WAPIClient {
 
     public boolean requestAccess(String code) {
         boolean result = false;
-        Resources res = _mainActivity.getResources();
+        Resources res = _context.getResources();
         List<NameValuePair> pairs = new ArrayList<NameValuePair>();
         pairs.add(new BasicNameValuePair("client_id", _config.clientId));
         pairs.add(new BasicNameValuePair("client_secret", _config.clientSecret));
@@ -350,7 +346,7 @@ public class WAPIClient {
             String responseText = this.get(_config.wapiGetBusinessAcountsMy, true);
             JSONArray json = new JSONArray(responseText);
             Account account;
-            Resources res = _mainActivity.getResources();
+            Resources res = _context.getResources();
             for (int i = 0; i < json.length(); i++) {
                 JSONObject jsonO = (JSONObject) json.get(i);
                 account = new Account(jsonO);
@@ -399,9 +395,9 @@ public class WAPIClient {
         byte[] pictureBytes = null;
         try {
             String url = String.format(_config.wapiLoadPicture, id, size);
-            Log.d("url: "+ url);
+            Log.d("url: " + url);
             pictureBytes = this.getByteArray(url, true);
-            Log.d("pictureBytes=" + pictureBytes);
+            Log.d("pictureBytes=" + pictureBytes.length);
         } catch (ParseException e) {
             Log.e("Parse Exception " + e + "");
         } catch (Exception e) {

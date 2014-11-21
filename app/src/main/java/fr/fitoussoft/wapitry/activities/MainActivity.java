@@ -19,12 +19,12 @@ public class MainActivity extends Activity {
 
     private void verifyTokenAndGoHome() {
         WAPIClient client = AuthActivity.setupWAPIClient(this);
-        if (client.hasRefreshToken()) {
-            navigateToAccounts();
+        if (client.hasToAuthenticate()) {
+            WAPIClient.navigateToAuth(this);
             return;
         }
 
-        client.navigateToAuth(this);
+        navigateToAccounts();
     }
 
     @Override
@@ -32,8 +32,6 @@ public class MainActivity extends Activity {
         Log.d("[TRY]", "Main onCreate.");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-
-        AuthActivity.setupWAPIClient(this);
     }
 
     @Override

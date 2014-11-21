@@ -2,7 +2,7 @@ package fr.fitoussoft.wapisdk.activities;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Intent;
+import android.content.Context;
 import android.content.res.Resources;
 import android.net.http.SslError;
 import android.os.AsyncTask;
@@ -21,7 +21,6 @@ import fr.fitoussoft.wapisdk.helpers.WAPIClient;
 
 public class AuthActivity extends Activity {
 
-
     private static WAPIClient _client;
     private WebView loginWebView;
     private WebViewClient loginWebViewClient;
@@ -34,15 +33,10 @@ public class AuthActivity extends Activity {
     public static WAPIClient setupWAPIClient(Activity mainActivity) {
         if (_client == null) {
             // setups WAPIClient.
-            _client = new WAPIClient(mainActivity);
+            _client = new WAPIClient(mainActivity, mainActivity.getPreferences(Context.MODE_PRIVATE));
         }
 
         return _client;
-    }
-
-    public void navigateToMain() {
-        Intent myIntent = new Intent(this, getClient().getMainActivity().getClass());
-        this.startActivity(myIntent);
     }
 
     private AsyncTask<String, Integer, Boolean> createRequestAsyncTask() {
@@ -56,7 +50,7 @@ public class AuthActivity extends Activity {
             @Override
             protected void onPostExecute(Boolean aBoolean) {
                 if (aBoolean) {
-                    navigateToMain();
+                    AuthActivity.this.finish();
                 }
             }
         };
