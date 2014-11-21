@@ -17,36 +17,28 @@ import android.widget.TextView;
 
 import java.util.List;
 
-import fr.fitoussoft.wapisdk.activities.AuthActivity;
 import fr.fitoussoft.wapisdk.helpers.WAPIClient;
 import fr.fitoussoft.wapisdk.models.Account;
-import fr.fitoussoft.wapisdk.services.WAPIService;
+import fr.fitoussoft.wapisdk.services.WAPIServiceConnection;
 import fr.fitoussoft.wapitry.R;
 
 public class AccountsActivity extends Activity {
-
     private List<Account> accounts;
-
     private ArrayAdapter<Account> accountsAdapter;
+    private WAPIServiceConnection connection = new WAPIServiceConnection(this) {
+        @Override
+        protected void onAuthenticated(WAPIClient client) {
+            displayAccounts(client);
+        }
+    };
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        Log.d("[TRY]", "Accounts onCreate.");
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.accounts);
-
+    private void displayAccounts (WAPIClient client) {
         if (accounts == null) {
-            WAPIClient client = WAPIService.getClient();
-            if (client.hasToAuthenticate()) {
-                WAPIClient.navigateToAuth(this);
-                return;
-            }
-
             accounts = client.requestBusinessAccounts();
         }
 
         if (accountsAdapter == null) {
-            accountsAdapter = new ArrayAdapter<Account>(this, R.layout.account_item, accounts) {
+            accountsAdapter = new ArrayAdapter<Account>(AccountsActivity.this, R.layout.account_item, accounts) {
 
                 @Override
                 public View getView(int position, View convertView, ViewGroup parent) {
@@ -89,9 +81,23 @@ public class AccountsActivity extends Activity {
     }
 
     @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        Log.d("[TRY]", "Accounts onCreate.");
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.accounts);
+    }
+
+    @Override
     protected void onResume() {
         Log.d("[TRY]", "Accounts onResume.");
         super.onResume();
+        connection.bindService();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        connection.unbindService();
     }
 
     @Override
@@ -108,7 +114,7 @@ public class AccountsActivity extends Activity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.option_disconnect) {
-            WAPIService.getClient().disconnect(this);
+            connection.disconnect();
             return true;
         }
 

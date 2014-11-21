@@ -4,5 +4,6 @@
     <string name="redirect_uri">http://localhost</string>
     <string name="title_activity_auth">Identification</string>
     <string name="icon_size">Medium</string>
+    <string name="exception_message_no_client_clreated">WAPI client is null. You have to bind activity to the service by call method "bindService" before.</string>
 
 </resources>

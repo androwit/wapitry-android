@@ -41,9 +41,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.security.KeyStore;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
 
 import fr.fitoussoft.wapisdk.R;
@@ -57,50 +55,47 @@ import fr.fitoussoft.wapisdk.models.Reflection;
  */
 public class WAPIClient extends Binder {
     public static boolean DEBUG = true;
-    public int nextSkip = 0;
-    private Config _config;
 
-    private HttpClient _client;
-    private String _refreshToken = "";
-    private String _accessToken = "";
-    private Calendar _expireDate;
+    public int nextSkip = 0;
+    private Config config;
+
+    private HttpClient httpClient;
     private Context _context;
-    private SharedPreferences _prefs;
+    private WAPIToken _token;
 
     public WAPIClient(Context context, SharedPreferences prefs) {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().detectAll().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
-        _client = WAPIClient.getNewHttpClient();
+        httpClient = WAPIClient.getNewHttpClient();
         _context = context;
         Resources res = _context.getResources();
 
-        _config = new Config();
+        config = new Config();
 
-        _config.clientId = res.getString(R.string.client_id);
-        _config.clientSecret = res.getString(R.string.client_secret);
-        _config.wapiAuthorise = res.getString(R.string.wapi_authorise);
-        _config.wapiToken = res.getString(R.string.wapi_token);
-        _config.wapiGetBusinessAcountsMy = res.getString(R.string.wapi_GetBusinessAccountsMy);
-        _config.wapiSearchReflections = res.getString(R.string.wapi_SearchReflections);
-        _config.wapiLoadPicture = res.getString(R.string.wapi_LoadPicture);
+        config.clientId = res.getString(R.string.client_id);
+        config.clientSecret = res.getString(R.string.client_secret);
+        config.wapiAuthorise = res.getString(R.string.wapi_authorise);
+        config.wapiToken = res.getString(R.string.wapi_token);
+        config.wapiGetBusinessAcountsMy = res.getString(R.string.wapi_GetBusinessAccountsMy);
+        config.wapiSearchReflections = res.getString(R.string.wapi_SearchReflections);
+        config.wapiLoadPicture = res.getString(R.string.wapi_LoadPicture);
 
         if (DEBUG) {
-            _config.clientId = res.getString(R.string.client_id_beta);
-            _config.clientSecret = res.getString(R.string.client_secret_beta);
-            _config.wapiAuthorise = res.getString(R.string.wapi_authorise_beta);
-            _config.wapiToken = res.getString(R.string.wapi_token_beta);
-            _config.wapiGetBusinessAcountsMy = res.getString(R.string.wapi_GetBusinessAccountsMy_beta);
-            _config.wapiSearchReflections = res.getString(R.string.wapi_SearchReflections_beta);
-            _config.wapiLoadPicture = res.getString(R.string.wapi_LoadPicture_beta);
+            config.clientId = res.getString(R.string.client_id_beta);
+            config.clientSecret = res.getString(R.string.client_secret_beta);
+            config.wapiAuthorise = res.getString(R.string.wapi_authorise_beta);
+            config.wapiToken = res.getString(R.string.wapi_token_beta);
+            config.wapiGetBusinessAcountsMy = res.getString(R.string.wapi_GetBusinessAccountsMy_beta);
+            config.wapiSearchReflections = res.getString(R.string.wapi_SearchReflections_beta);
+            config.wapiLoadPicture = res.getString(R.string.wapi_LoadPicture_beta);
         }
 
         // restore stored tokens
-        _prefs = prefs;
-        this.loadTokens();
+        _token = new WAPIToken(prefs, DEBUG);
     }
 
-    public static HttpClient getNewHttpClient() {
+    private static HttpClient getNewHttpClient() {
         try {
             KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
             trustStore.load(null, null);
@@ -125,7 +120,7 @@ public class WAPIClient extends Binder {
         }
     }
 
-    public static void navigateToAuth(Activity activity) {
+    private static void navigateToAuth(Activity activity) {
         Intent myIntent = new Intent(activity, AuthActivity.class);
         activity.startActivityForResult(myIntent, 0);
     }
@@ -133,7 +128,7 @@ public class WAPIClient extends Binder {
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public void disconnect(final Activity activity) {
         Log.d("disconnect.");
-        this.resetTokens();
+        _token.resetTokens();
         Log.d("SDK: " + Build.VERSION.SDK_INT + ", JELLY BEAN: " + Build.VERSION_CODES.KITKAT);
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT) {
             CookieManager cookieManager = CookieManager.getInstance();
@@ -154,23 +149,20 @@ public class WAPIClient extends Binder {
     }
 
     public Config getConfig() {
-        return _config;
-    }
-
-    public boolean hasAccessToken() {
-        return _accessToken != null && !_accessToken.isEmpty();
-    }
-
-    public boolean hasRefreshToken() {
-        return _refreshToken != null && !_refreshToken.isEmpty();
-    }
-
-    public boolean hasExpired() {
-        return _expireDate == null || _expireDate.getTimeInMillis() <= Calendar.getInstance().getTimeInMillis();
+        return config;
     }
 
     public boolean hasToAuthenticate() {
-        return !this.hasAccessToken() || this.hasExpired() && (!this.hasRefreshToken() || !this.refreshAccess());
+        return !_token.hasAccessToken() || _token.hasExpired() && (!_token.hasRefreshToken() || !requestRefreshAccessToken());
+    }
+
+    public boolean authenticateIfNeeded(Activity origin) {
+        if (hasToAuthenticate()) {
+            navigateToAuth(origin);
+            return true;
+        }
+
+        return false;
     }
 
     public String get(String url, boolean withAccessToken) {
@@ -180,10 +172,10 @@ public class WAPIClient extends Binder {
         try {
 
             if (withAccessToken) {
-                get.addHeader("Authorization", "Bearer " + _accessToken);
+                get.addHeader("Authorization", "Bearer " + _token.getAccessToken());
             }
 
-            HttpResponse response = _client.execute(get);
+            HttpResponse response = httpClient.execute(get);
             responseText = EntityUtils.toString(response.getEntity());
         } catch (ParseException e) {
             Log.e("Parse Exception " + e + "");
@@ -204,10 +196,10 @@ public class WAPIClient extends Binder {
         try {
 
             if (withAccessToken) {
-                get.addHeader("Authorization", "Bearer " + _accessToken);
+                get.addHeader("Authorization", "Bearer " + _token.getAccessToken());
             }
 
-            HttpResponse response = _client.execute(get);
+            HttpResponse response = httpClient.execute(get);
             responseArray = EntityUtils.toByteArray(response.getEntity());
         } catch (ParseException e) {
             Log.e("Parse Exception " + e + "");
@@ -230,10 +222,10 @@ public class WAPIClient extends Binder {
             }
 
             if (withAccessToken) {
-                post.addHeader("Authorization", "Bearer " + _accessToken);
+                post.addHeader("Authorization", "Bearer " + _token.getAccessToken());
             }
 
-            HttpResponse response = _client.execute(post);
+            HttpResponse response = httpClient.execute(post);
             responseText = EntityUtils.toString(response.getEntity());
         } catch (ParseException e) {
             Log.e("Parse Exception " + e + "");
@@ -251,54 +243,21 @@ public class WAPIClient extends Binder {
         return this.post(url, null, withAccessToken);
     }
 
-    public void saveTokens() {
-        SharedPreferences.Editor editor = _prefs.edit();
-        editor.putString("accessToken", _accessToken);
-        editor.putString("refreshToken", _refreshToken);
-        editor.putLong("expireTime", _expireDate.getTimeInMillis());
-        editor.commit();
-    }
-
-    public void loadTokens() {
-        _refreshToken = _prefs.getString("refreshToken", "");
-        _accessToken = _prefs.getString("accessToken", "");
-        long expireTime = _prefs.getLong("expireTime", 0);
-        _expireDate = Calendar.getInstance();
-        _expireDate.setTimeInMillis(expireTime);
-    }
-
-    public void resetTokens() {
-        SharedPreferences.Editor editor = _prefs.edit();
-        editor.remove("accessToken");
-        editor.remove("refreshToken");
-        editor.remove("expireTime");
-        editor.commit();
-    }
-
-    public boolean requestAccess(String code) {
+    public boolean requestAccessToken(String code) {
         boolean result = false;
         Resources res = _context.getResources();
         List<NameValuePair> pairs = new ArrayList<NameValuePair>();
-        pairs.add(new BasicNameValuePair("client_id", _config.clientId));
-        pairs.add(new BasicNameValuePair("client_secret", _config.clientSecret));
+        pairs.add(new BasicNameValuePair("client_id", config.clientId));
+        pairs.add(new BasicNameValuePair("client_secret", config.clientSecret));
         pairs.add(new BasicNameValuePair("code", code));
         pairs.add(new BasicNameValuePair("grant_type", "authorization_code"));
         pairs.add(new BasicNameValuePair("redirect_uri", res.getString(R.string.redirect_uri)));
-
         try {
-            String responseText = this.post(_config.wapiToken, pairs, false);
+            String responseText = this.post(config.wapiToken, pairs, false);
             JSONObject json = new JSONObject(responseText);
-            _accessToken = json.getString("access_token");
-            _refreshToken = json.getString("refresh_token");
-            _expireDate = Calendar.getInstance();
-            _expireDate.add(Calendar.SECOND, json.getInt("expires_in"));
-
-            this.saveTokens();
-
-            Log.d("accessToken=" + _accessToken);
-            Log.d("refreshToken=" + _refreshToken);
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            Log.d("expires=" + sdf.format(_expireDate.getTime()));
+            _token.setTokens(json.getString("access_token"),
+                    json.getString("refresh_token"),
+                    json.getInt("expires_in"));
             result = true;
         } catch (ParseException e) {
             Log.e("Parse Exception " + e + "");
@@ -309,28 +268,20 @@ public class WAPIClient extends Binder {
         return result;
     }
 
-    public boolean refreshAccess() {
+    public boolean requestRefreshAccessToken() {
         boolean result = false;
         List<NameValuePair> pairs = new ArrayList<NameValuePair>();
-        pairs.add(new BasicNameValuePair("client_id", _config.clientId));
-        pairs.add(new BasicNameValuePair("client_secret", _config.clientSecret));
-        pairs.add(new BasicNameValuePair("refresh_token", _refreshToken));
+        pairs.add(new BasicNameValuePair("client_id", config.clientId));
+        pairs.add(new BasicNameValuePair("client_secret", config.clientSecret));
+        pairs.add(new BasicNameValuePair("refresh_token", _token.getRefreshToken()));
         pairs.add(new BasicNameValuePair("grant_type", "refresh_token"));
 
         try {
-            String responseText = this.post(_config.wapiToken, pairs, false);
+            String responseText = this.post(config.wapiToken, pairs, false);
             JSONObject json = new JSONObject(responseText);
-            _accessToken = json.getString("access_token");
-            _refreshToken = json.getString("refresh_token");
-            _expireDate = Calendar.getInstance();
-            _expireDate.add(Calendar.SECOND, json.getInt("expires_in"));
-
-            this.saveTokens();
-
-            Log.d("accessToken=" + _accessToken);
-            Log.d("refreshToken=" + _refreshToken);
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            Log.d("expires=" + sdf.format(_expireDate.getTime()));
+            _token.setTokens(json.getString("access_token"),
+                    json.getString("refresh_token"),
+                    json.getInt("expires_in"));
             result = true;
         } catch (ParseException e) {
             Log.e("Parse Exception " + e + "");
@@ -344,7 +295,7 @@ public class WAPIClient extends Binder {
     public List<Account> requestBusinessAccounts() {
         List<Account> accounts = new ArrayList<Account>();
         try {
-            String responseText = this.get(_config.wapiGetBusinessAcountsMy, true);
+            String responseText = this.get(config.wapiGetBusinessAcountsMy, true);
             JSONArray json = new JSONArray(responseText);
             Account account;
             Resources res = _context.getResources();
@@ -373,7 +324,7 @@ public class WAPIClient extends Binder {
     public List<Reflection> requestReflections(String wac, int skip, int take) {
         List<Reflection> reflections = new ArrayList<Reflection>();
         try {
-            String url = String.format(_config.wapiSearchReflections, wac, skip, take);
+            String url = String.format(config.wapiSearchReflections, wac, skip, take);
             String responseText = this.get(url, true);
             JSONObject jsonContainer = new JSONObject(responseText);
             JSONArray json = jsonContainer.getJSONArray("reflections");
@@ -391,11 +342,10 @@ public class WAPIClient extends Binder {
         return reflections;
     }
 
-
     public byte[] requestPicture(String id, String size) {
         byte[] pictureBytes = null;
         try {
-            String url = String.format(_config.wapiLoadPicture, id, size);
+            String url = String.format(config.wapiLoadPicture, id, size);
             Log.d("url: " + url);
             pictureBytes = this.getByteArray(url, true);
             Log.d("pictureBytes=" + pictureBytes.length);
@@ -408,7 +358,7 @@ public class WAPIClient extends Binder {
         return pictureBytes;
     }
 
-    public List<Reflection> nextRequestReflections(String wac) {
+    public List<Reflection> requestNextReflections(String wac) {
         int pageSize = 20;
         int newSkip = nextSkip;
         nextSkip += pageSize;

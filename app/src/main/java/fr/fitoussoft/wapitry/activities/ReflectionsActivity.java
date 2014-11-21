@@ -20,7 +20,7 @@ import java.util.List;
 
 import fr.fitoussoft.wapisdk.helpers.WAPIClient;
 import fr.fitoussoft.wapisdk.models.Reflection;
-import fr.fitoussoft.wapisdk.services.WAPIService;
+import fr.fitoussoft.wapisdk.services.WAPIServiceConnection;
 import fr.fitoussoft.wapitry.R;
 
 public class ReflectionsActivity extends Activity {
@@ -28,6 +28,52 @@ public class ReflectionsActivity extends Activity {
     private List<Reflection> reflections;
     private String wac;
     private ArrayAdapter<Reflection> reflectionsAdapter;
+    private WAPIServiceConnection connection = new WAPIServiceConnection(this) {
+
+        @Override
+        public void onAuthenticated(WAPIClient client) {
+            if (reflections == null) {
+                reflections = new ArrayList<Reflection>();
+            }
+
+            if (reflectionsAdapter == null) {
+                reflectionsAdapter = new ArrayAdapter<Reflection>(ReflectionsActivity.this, R.layout.reflection_item, reflections) {
+
+                    @Override
+                    public View getView(int position, View convertView, ViewGroup parent) {
+                        // Get the data item for this position
+                        Reflection reflection = getItem(position);
+
+                        // Check if an existing view is being reused, otherwise inflate the view
+                        if (convertView == null) {
+                            convertView = LayoutInflater.from(getContext()).inflate(R.layout.reflection_item, parent, false);
+                        }
+
+                        // Lookup view for data population
+                        TextView tvName = (TextView) convertView.findViewById(R.id.name);
+                        TextView tvClassName = (TextView) convertView.findViewById(R.id.className);
+
+                        // Populate the data into the template view using the data object
+                        tvName.setText(reflection.getName());
+                        tvClassName.setText(reflection.getClassName());
+
+                        // Return the completed view to render on screen
+                        return convertView;
+                    }
+                };
+            }
+
+            ListView listView = (ListView) findViewById(R.id.reflections);
+            listView.setOnScrollListener(new EndlessScrollListener());
+            listView.setAdapter(reflectionsAdapter);
+
+
+            progressBar.setVisibility(View.VISIBLE);
+            client.nextSkip = 0;
+            ReflectionsAsyncTask task = new ReflectionsAsyncTask();
+            task.execute(wac);
+        }
+    };
     private ProgressBar progressBar;
     private boolean loading = true;
 
@@ -44,53 +90,6 @@ public class ReflectionsActivity extends Activity {
         }
 
         progressBar.setVisibility(View.INVISIBLE);
-
-        if (reflections == null) {
-            WAPIClient client = WAPIService.getClient();
-            if (client.hasToAuthenticate()) {
-                WAPIClient.navigateToAuth(this);
-                return;
-            }
-
-            reflections = new ArrayList<Reflection>();
-        }
-
-        if (reflectionsAdapter == null) {
-            reflectionsAdapter = new ArrayAdapter<Reflection>(this, R.layout.reflection_item, reflections) {
-
-                @Override
-                public View getView(int position, View convertView, ViewGroup parent) {
-                    // Get the data item for this position
-                    Reflection reflection = getItem(position);
-
-                    // Check if an existing view is being reused, otherwise inflate the view
-                    if (convertView == null) {
-                        convertView = LayoutInflater.from(getContext()).inflate(R.layout.reflection_item, parent, false);
-                    }
-
-                    // Lookup view for data population
-                    TextView tvName = (TextView) convertView.findViewById(R.id.name);
-                    TextView tvClassName = (TextView) convertView.findViewById(R.id.className);
-
-                    // Populate the data into the template view using the data object
-                    tvName.setText(reflection.getName());
-                    tvClassName.setText(reflection.getClassName());
-
-                    // Return the completed view to render on screen
-                    return convertView;
-                }
-            };
-        }
-
-        ListView listView = (ListView) findViewById(R.id.reflections);
-        listView.setOnScrollListener(new EndlessScrollListener());
-        listView.setAdapter(reflectionsAdapter);
-
-
-        progressBar.setVisibility(View.VISIBLE);
-        WAPIService.getClient().nextSkip = 0;
-        ReflectionsAsyncTask task = new ReflectionsAsyncTask();
-        task.execute(wac);
     }
 
     @Override
@@ -107,24 +106,41 @@ public class ReflectionsActivity extends Activity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.option_disconnect) {
-            WAPIService.getClient().disconnect(this);
+            connection.disconnect();
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        connection.unbindService();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        connection.bindService();
+    }
+
     public class ReflectionsAsyncTask extends AsyncTask<String, Integer, List<Reflection>> {
         @Override
         protected List<Reflection> doInBackground(String... strings) {
-            WAPIClient client = WAPIService.getClient();
-            return client.nextRequestReflections(strings[0]);
+            try {
+                WAPIClient client = connection.getClient();
+                return client.requestNextReflections(strings[0]);
+            } catch (WAPIServiceConnection.NoClientCreatedException e) {
+                Log.e("[TRY]", e.toString());
+            }
+
+            return null;
         }
 
         @Override
         protected void onPostExecute(List<Reflection> list) {
             if (list != null) {
-                //reflectionsAdapter.clear();
                 reflectionsAdapter.addAll(list);
             }
 
