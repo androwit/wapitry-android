@@ -2,7 +2,6 @@ package fr.fitoussoft.wapisdk.activities;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.Context;
 import android.content.res.Resources;
 import android.net.http.SslError;
 import android.os.AsyncTask;
@@ -18,32 +17,20 @@ import java.io.UnsupportedEncodingException;
 import fr.fitoussoft.wapisdk.R;
 import fr.fitoussoft.wapisdk.helpers.Log;
 import fr.fitoussoft.wapisdk.helpers.WAPIClient;
+import fr.fitoussoft.wapisdk.services.WAPIService;
 
 public class AuthActivity extends Activity {
 
-    private static WAPIClient _client;
     private WebView loginWebView;
     private WebViewClient loginWebViewClient;
     private AsyncTask<String, Integer, Boolean> requestAccessTask;
 
-    public static WAPIClient getClient() {
-        return _client;
-    }
-
-    public static WAPIClient setupWAPIClient(Activity mainActivity) {
-        if (_client == null) {
-            // setups WAPIClient.
-            _client = new WAPIClient(mainActivity, mainActivity.getPreferences(Context.MODE_PRIVATE));
-        }
-
-        return _client;
-    }
 
     private AsyncTask<String, Integer, Boolean> createRequestAsyncTask() {
         return new AsyncTask<String, Integer, Boolean>() {
             @Override
             protected Boolean doInBackground(String... strings) {
-                WAPIClient client = getClient();
+                WAPIClient client = WAPIService.getClient();
                 return client.requestAccess(strings[0]);
             }
 
@@ -107,7 +94,7 @@ public class AuthActivity extends Activity {
 
     private void authenticate() {
         Resources res = getResources();
-        WAPIClient client = getClient();
+        WAPIClient client = WAPIService.getClient();
         String url = String.format(client.getConfig().wapiAuthorise,
                 client.getConfig().clientId,
                 res.getString(R.string.redirect_uri));

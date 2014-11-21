@@ -9,6 +9,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.ParseException;
+import android.os.Binder;
 import android.os.Build;
 import android.os.StrictMode;
 import android.webkit.CookieManager;
@@ -54,7 +55,7 @@ import fr.fitoussoft.wapisdk.models.Reflection;
 /**
  * Created by emmanuel.fitoussi on 07/10/2014.
  */
-public class WAPIClient {
+public class WAPIClient extends Binder {
     public static boolean DEBUG = true;
     public int nextSkip = 0;
     private Config _config;
