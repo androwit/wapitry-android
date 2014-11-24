@@ -23,6 +23,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
@@ -55,6 +56,19 @@ import fr.fitoussoft.wapisdk.models.Reflection;
  */
 public class WAPIClient extends Binder {
     public static boolean DEBUG = true;
+
+    private final static String PARAM_CLIENT_ID = "client_id";
+    private final static String PARAM_CLIENT_SECRET = "client_secret";
+    private final static String PARAM_CODE = "code";
+    private final static String PARAM_GRANT_TYPE = "grant_type";
+    private final static String PARAM_REDIRECT_URI = "redirect_uri";
+    private final static String PARAM_AUTHORIZATION_CODE = "authorization_code";
+    private final static String PARAM_REFRESH_TOKEN = "refresh_token";
+
+    private final static String JSON_FIELD_ACCESS_TOKEN = "access_token";
+    private final static String JSON_FIELD_REFRESH_TOKEN = "refresh_token";
+    private final static String JSON_FIELD_EXPIRES_IN = "expires_in";
+    private final static String JSON_FIELD_REFLECTIONS = "reflections";
 
     public int nextSkip = 0;
     private Config config;
@@ -172,7 +186,7 @@ public class WAPIClient extends Binder {
         try {
 
             if (withAccessToken) {
-                get.addHeader("Authorization", "Bearer " + _token.getAccessToken());
+                addAccessTokenToHeader(get);
             }
 
             HttpResponse response = httpClient.execute(get);
@@ -189,6 +203,7 @@ public class WAPIClient extends Binder {
         return responseText;
     }
 
+    // TODO refactor with get method
     public byte[] getByteArray(String url, boolean withAccessToken) {
         Log.d("GET " + url + ", with accessToken: " + withAccessToken);
         HttpGet get = new HttpGet(url);
@@ -196,7 +211,7 @@ public class WAPIClient extends Binder {
         try {
 
             if (withAccessToken) {
-                get.addHeader("Authorization", "Bearer " + _token.getAccessToken());
+                addAccessTokenToHeader(get);
             }
 
             HttpResponse response = httpClient.execute(get);
@@ -212,6 +227,10 @@ public class WAPIClient extends Binder {
         return responseArray;
     }
 
+    private void addAccessTokenToHeader(HttpRequestBase httpMethod) {
+        httpMethod.addHeader("Authorization", "Bearer " + _token.getAccessToken());
+    }
+
     public String post(String url, List<NameValuePair> pairs, boolean withAccessToken) {
         Log.d("POST " + url + ", with accessToken: " + withAccessToken);
         HttpPost post = new HttpPost(url);
@@ -222,7 +241,7 @@ public class WAPIClient extends Binder {
             }
 
             if (withAccessToken) {
-                post.addHeader("Authorization", "Bearer " + _token.getAccessToken());
+                addAccessTokenToHeader(post);
             }
 
             HttpResponse response = httpClient.execute(post);
@@ -247,17 +266,17 @@ public class WAPIClient extends Binder {
         boolean result = false;
         Resources res = _context.getResources();
         List<NameValuePair> pairs = new ArrayList<NameValuePair>();
-        pairs.add(new BasicNameValuePair("client_id", config.clientId));
-        pairs.add(new BasicNameValuePair("client_secret", config.clientSecret));
-        pairs.add(new BasicNameValuePair("code", code));
-        pairs.add(new BasicNameValuePair("grant_type", "authorization_code"));
-        pairs.add(new BasicNameValuePair("redirect_uri", res.getString(R.string.redirect_uri)));
+        pairs.add(new BasicNameValuePair(PARAM_CLIENT_ID, config.clientId));
+        pairs.add(new BasicNameValuePair(PARAM_CLIENT_SECRET, config.clientSecret));
+        pairs.add(new BasicNameValuePair(PARAM_CODE, code));
+        pairs.add(new BasicNameValuePair(PARAM_GRANT_TYPE, PARAM_AUTHORIZATION_CODE));
+        pairs.add(new BasicNameValuePair(PARAM_REDIRECT_URI, res.getString(R.string.redirect_uri)));
         try {
             String responseText = this.post(config.wapiToken, pairs, false);
             JSONObject json = new JSONObject(responseText);
-            _token.setTokens(json.getString("access_token"),
-                    json.getString("refresh_token"),
-                    json.getInt("expires_in"));
+            _token.setTokens(json.getString(JSON_FIELD_ACCESS_TOKEN),
+                    json.getString(JSON_FIELD_REFRESH_TOKEN),
+                    json.getInt(JSON_FIELD_EXPIRES_IN));
             result = true;
         } catch (ParseException e) {
             Log.e("Parse Exception " + e + "");
@@ -271,17 +290,17 @@ public class WAPIClient extends Binder {
     public boolean requestRefreshAccessToken() {
         boolean result = false;
         List<NameValuePair> pairs = new ArrayList<NameValuePair>();
-        pairs.add(new BasicNameValuePair("client_id", config.clientId));
-        pairs.add(new BasicNameValuePair("client_secret", config.clientSecret));
-        pairs.add(new BasicNameValuePair("refresh_token", _token.getRefreshToken()));
-        pairs.add(new BasicNameValuePair("grant_type", "refresh_token"));
+        pairs.add(new BasicNameValuePair(PARAM_CLIENT_ID, config.clientId));
+        pairs.add(new BasicNameValuePair(PARAM_CLIENT_SECRET, config.clientSecret));
+        pairs.add(new BasicNameValuePair(PARAM_REFRESH_TOKEN, _token.getRefreshToken()));
+        pairs.add(new BasicNameValuePair(PARAM_GRANT_TYPE, PARAM_REFRESH_TOKEN));
 
         try {
             String responseText = this.post(config.wapiToken, pairs, false);
             JSONObject json = new JSONObject(responseText);
-            _token.setTokens(json.getString("access_token"),
-                    json.getString("refresh_token"),
-                    json.getInt("expires_in"));
+            _token.setTokens(json.getString(JSON_FIELD_ACCESS_TOKEN),
+                    json.getString(JSON_FIELD_REFRESH_TOKEN),
+                    json.getInt(JSON_FIELD_EXPIRES_IN));
             result = true;
         } catch (ParseException e) {
             Log.e("Parse Exception " + e + "");
@@ -327,7 +346,7 @@ public class WAPIClient extends Binder {
             String url = String.format(config.wapiSearchReflections, wac, skip, take);
             String responseText = this.get(url, true);
             JSONObject jsonContainer = new JSONObject(responseText);
-            JSONArray json = jsonContainer.getJSONArray("reflections");
+            JSONArray json = jsonContainer.getJSONArray(JSON_FIELD_REFLECTIONS);
             for (int i = 0; i < json.length(); i++) {
                 JSONObject jsonO = (JSONObject) json.get(i);
                 reflections.add(new Reflection(jsonO));

@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
 
-import fr.fitoussoft.wapisdk.R;
 import fr.fitoussoft.wapisdk.helpers.Log;
 import fr.fitoussoft.wapisdk.helpers.WAPIClient;
 
@@ -113,7 +112,7 @@ public abstract class WAPIServiceConnection implements ServiceConnection {
      */
     public final class NoClientCreatedException extends Exception {
         public NoClientCreatedException() {
-            super(origin.getResources().getString(R.string.exception_message_no_client_clreated));
+            super("WAPI client is null. You have to bind activity to the service by call method \"bindService\" before.");
         }
     }
 

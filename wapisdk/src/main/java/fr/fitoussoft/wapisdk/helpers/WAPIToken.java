@@ -9,10 +9,10 @@ import java.util.Calendar;
  * Created by emmanuel.fitoussi on 24/11/2014.
  */
 public class WAPIToken {
-    private static String PREF_ACCESS_TOKEN = "accessToken";
-    private static String PREF_REFRESH_TOKEN = "refreshToken";
-    private static String PREF_EXPIRE_TIME = "expireTime";
-    private static String PREF_SUB_DEBUG = "debug_";
+    private final static String PREF_ACCESS_TOKEN = "accessToken";
+    private final static String PREF_REFRESH_TOKEN = "refreshToken";
+    private final static String PREF_EXPIRE_TIME = "expireTime";
+    private final static String PREF_SUB_DEBUG = "debug_";
 
     private boolean isDebug = false;
 
