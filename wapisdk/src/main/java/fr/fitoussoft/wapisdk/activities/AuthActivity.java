@@ -1,13 +1,11 @@
 package fr.fitoussoft.wapisdk.activities;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.ComponentName;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.net.http.SslError;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.view.View;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebSettings;
@@ -16,65 +14,27 @@ import android.webkit.WebViewClient;
 
 import java.io.UnsupportedEncodingException;
 
+import fr.fitoussoft.wapisdk.IWapiApplication;
 import fr.fitoussoft.wapisdk.R;
 import fr.fitoussoft.wapisdk.helpers.Log;
 import fr.fitoussoft.wapisdk.helpers.WAPIClient;
-import fr.fitoussoft.wapisdk.services.WAPIServiceConnection;
 
-public class AuthActivity extends Activity {
+public class AuthActivity extends Activity implements IWapiActivity {
 
     private WebView loginWebView;
     private WebViewClient loginWebViewClient;
     private AsyncTask<String, Integer, Boolean> requestAccessTask;
-    private WAPIServiceConnection connection = new WAPIServiceConnection(this) {
 
-        @Override
-        @SuppressLint("SetJavaScriptEnabled")
-        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            Log.d("onServiceConnected.");
-            client = (WAPIClient) iBinder;
-
-            // setup.
-            if (loginWebView == null) {
-                loginWebView = (WebView) findViewById(R.id.webView);
-                WebSettings ws = loginWebView.getSettings();
-                if (loginWebViewClient == null) {
-                    loginWebViewClient = createWebViewClient();
-                    loginWebView.setWebViewClient(loginWebViewClient);
-                    loginWebView.setVisibility(View.INVISIBLE);
-                }
-
-                ws.setSaveFormData(false);
-                loginWebView.getSettings().setJavaScriptEnabled(true);
-            }
-
-            if (requestAccessTask == null) {
-                requestAccessTask = createRequestAsyncTask();
-            }
-
-            authenticate(client);
-            onAuthenticated(client);
-        }
-
-
-        @Override
-        protected void onAuthenticated(WAPIClient client) {
-        }
-    };
-
+    private WAPIClient getWapiClient() {
+        return ((IWapiApplication) this.getApplication()).getWapiClient();
+    }
 
     private AsyncTask<String, Integer, Boolean> createRequestAsyncTask() {
         return new AsyncTask<String, Integer, Boolean>() {
             @Override
             protected Boolean doInBackground(String... strings) {
-                try {
-                    WAPIClient client = connection.getClient();
-                    return client.requestAccessToken(strings[0]);
-                } catch (WAPIServiceConnection.NoClientCreatedException e) {
-                    Log.e(e.toString());
-                }
-
-                return null;
+                WAPIClient client = getWapiClient();
+                return client.requestAccessToken(strings[0]);
             }
 
             @Override
@@ -114,23 +74,20 @@ public class AuthActivity extends Activity {
                 return code;
             }
 
-
             @Override
-            public void onPageFinished(WebView view, String url) {
-                Log.d("page loaded with url: " + url);
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 String code = this.extractCodeFromURL(url);
-                if (code == null) {
-                    Log.d("code not found.");
-                    view.setVisibility(View.VISIBLE);
-                    super.onPageFinished(view, url);
+                if(code != null) {
+                    // hides WebView.
+                    view.setVisibility(View.INVISIBLE);
+
+                    // use code in POST request to get token.
+                    requestAccessTask.execute(code);
                     return;
                 }
 
-                // hides WebView.
-                view.setVisibility(View.INVISIBLE);
-
-                // use code in POST request to get token.
-                requestAccessTask.execute(code);
+                view.setVisibility(View.VISIBLE);
+                super.onPageStarted(view, url, favicon);
             }
         };
     }
@@ -156,12 +113,32 @@ public class AuthActivity extends Activity {
     protected void onResume() {
         Log.d("Auth onResume.");
         super.onResume();
-        connection.bindService();
+
+        WAPIClient client = getWapiClient();
+
+        // setup.
+        if (loginWebView == null) {
+            loginWebView = (WebView) findViewById(R.id.webView);
+            WebSettings ws = loginWebView.getSettings();
+            if (loginWebViewClient == null) {
+                loginWebViewClient = createWebViewClient();
+                loginWebView.setWebViewClient(loginWebViewClient);
+                loginWebView.setVisibility(View.INVISIBLE);
+            }
+
+            ws.setSaveFormData(false);
+            loginWebView.getSettings().setJavaScriptEnabled(true);
+        }
+
+        if (requestAccessTask == null) {
+            requestAccessTask = createRequestAsyncTask();
+        }
+
+        authenticate(client);
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        connection.unbindService();
+    public void onAuthenticated(WAPIClient wapiClient) {
+        // nothing to do.
     }
 }

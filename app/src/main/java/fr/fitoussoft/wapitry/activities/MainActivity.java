@@ -5,18 +5,12 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 
+import fr.fitoussoft.wapisdk.IWapiApplication;
+import fr.fitoussoft.wapisdk.activities.IWapiActivity;
 import fr.fitoussoft.wapisdk.helpers.WAPIClient;
-import fr.fitoussoft.wapisdk.services.WAPIServiceConnection;
 import fr.fitoussoft.wapitry.R;
 
-public class MainActivity extends Activity {
-
-    private WAPIServiceConnection connection = new WAPIServiceConnection(this) {
-        @Override
-        public void onAuthenticated(WAPIClient client) {
-            navigateToAccounts();
-        }
-    };
+public class MainActivity extends Activity implements IWapiActivity {
 
     private void navigateToAccounts() {
         Intent myIntent = new Intent(MainActivity.this, AccountsActivity.class);
@@ -34,13 +28,11 @@ public class MainActivity extends Activity {
     protected void onResume() {
         Log.d("[TRY]", "Main onResume.");
         super.onResume();
-        connection.bindService();
+        ((IWapiApplication) getApplication()).getWapiClient().verifyAuthentication(this);
     }
 
     @Override
-    protected void onPause() {
-        Log.d("[TRY]", "Main onPause.");
-        super.onPause();
-        connection.unbindService();
+    public void onAuthenticated(WAPIClient wapiClient) {
+        navigateToAccounts();
     }
 }

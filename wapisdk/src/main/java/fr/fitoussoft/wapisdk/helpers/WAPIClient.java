@@ -9,12 +9,13 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.ParseException;
-import android.os.Binder;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.StrictMode;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
 import android.webkit.ValueCallback;
+import android.widget.Toast;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpVersion;
@@ -40,13 +41,13 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.List;
 
 import fr.fitoussoft.wapisdk.R;
 import fr.fitoussoft.wapisdk.activities.AuthActivity;
+import fr.fitoussoft.wapisdk.activities.IWapiActivity;
 import fr.fitoussoft.wapisdk.models.Account;
 import fr.fitoussoft.wapisdk.models.Reflection;
 
@@ -54,9 +55,7 @@ import fr.fitoussoft.wapisdk.models.Reflection;
 /**
  * Created by emmanuel.fitoussi on 07/10/2014.
  */
-public class WAPIClient extends Binder {
-    public static boolean DEBUG = true;
-
+public class WAPIClient {
     private final static String PARAM_CLIENT_ID = "client_id";
     private final static String PARAM_CLIENT_SECRET = "client_secret";
     private final static String PARAM_CODE = "code";
@@ -64,12 +63,11 @@ public class WAPIClient extends Binder {
     private final static String PARAM_REDIRECT_URI = "redirect_uri";
     private final static String PARAM_AUTHORIZATION_CODE = "authorization_code";
     private final static String PARAM_REFRESH_TOKEN = "refresh_token";
-
     private final static String JSON_FIELD_ACCESS_TOKEN = "access_token";
     private final static String JSON_FIELD_REFRESH_TOKEN = "refresh_token";
     private final static String JSON_FIELD_EXPIRES_IN = "expires_in";
     private final static String JSON_FIELD_REFLECTIONS = "reflections";
-
+    public static boolean DEBUG = true;
     public int nextSkip = 0;
     private Config config;
 
@@ -167,16 +165,32 @@ public class WAPIClient extends Binder {
     }
 
     public boolean hasToAuthenticate() {
-        return !_token.hasAccessToken() || _token.hasExpired() && (!_token.hasRefreshToken() || !requestRefreshAccessToken());
+        return !_token.hasRefreshToken();
     }
 
-    public boolean authenticateIfNeeded(Activity origin) {
+    public boolean hasToRefreshAccessToken() {
+        return !_token.hasAccessToken() || _token.hasExpired();
+    }
+
+    public void verifyAuthentication(final Activity origin) {
         if (hasToAuthenticate()) {
             navigateToAuth(origin);
-            return true;
+            return;
         }
 
-        return false;
+        final IWapiActivity originActivity = (IWapiActivity) origin;
+
+        if (hasToRefreshAccessToken()) {
+            RequestRefreshAccessTokenAsyncTask task = new RequestRefreshAccessTokenAsyncTask() {
+                @Override
+                protected void onPostExecute(Boolean result) {
+                    originActivity.onAuthenticated(WAPIClient.this);
+                }
+            };
+            task.execute();
+        }
+
+        originActivity.onAuthenticated(this);
     }
 
     public String get(String url, boolean withAccessToken) {
@@ -191,16 +205,17 @@ public class WAPIClient extends Binder {
 
             HttpResponse response = httpClient.execute(get);
             responseText = EntityUtils.toString(response.getEntity());
-        } catch (ParseException e) {
-            Log.e("Parse Exception " + e + "");
-        } catch (IOException e) {
-            Log.e("IO Exception " + e + "");
         } catch (Exception e) {
-            Log.e("Unknown Exception " + e + "");
+            logError(e);
         }
 
         Log.d(responseText);
         return responseText;
+    }
+
+    private void logError(Exception e) {
+        Log.e("Parse Exception " + e + "");
+        Toast.makeText(this._context, "ERROR: " + e.toString(), Toast.LENGTH_LONG).show();
     }
 
     // TODO refactor with get method
@@ -216,12 +231,8 @@ public class WAPIClient extends Binder {
 
             HttpResponse response = httpClient.execute(get);
             responseArray = EntityUtils.toByteArray(response.getEntity());
-        } catch (ParseException e) {
-            Log.e("Parse Exception " + e + "");
-        } catch (IOException e) {
-            Log.e("IO Exception " + e + "");
         } catch (Exception e) {
-            Log.e("Unknown Exception " + e + "");
+            logError(e);
         }
 
         return responseArray;
@@ -246,12 +257,8 @@ public class WAPIClient extends Binder {
 
             HttpResponse response = httpClient.execute(post);
             responseText = EntityUtils.toString(response.getEntity());
-        } catch (ParseException e) {
-            Log.e("Parse Exception " + e + "");
-        } catch (IOException e) {
-            Log.e("IO Exception " + e + "");
         } catch (Exception e) {
-            Log.e("Unknown Exception " + e + "");
+            logError(e);
         }
 
         Log.d(responseText);
@@ -278,10 +285,8 @@ public class WAPIClient extends Binder {
                     json.getString(JSON_FIELD_REFRESH_TOKEN),
                     json.getInt(JSON_FIELD_EXPIRES_IN));
             result = true;
-        } catch (ParseException e) {
-            Log.e("Parse Exception " + e + "");
         } catch (Exception e) {
-            Log.e("Unknown Exception " + e + "");
+            logError(e);
         }
 
         return result;
@@ -303,9 +308,10 @@ public class WAPIClient extends Binder {
                     json.getInt(JSON_FIELD_EXPIRES_IN));
             result = true;
         } catch (ParseException e) {
-            Log.e("Parse Exception " + e + "");
+            logError(e);
         } catch (Exception e) {
             Log.e("Unknown Exception " + e + "");
+            Toast.makeText(this._context, "ERROR: " + e.toString(), Toast.LENGTH_SHORT).show();
         }
 
         return result;
@@ -331,10 +337,8 @@ public class WAPIClient extends Binder {
 
             }
             Log.d("json=" + json);
-        } catch (ParseException e) {
-            Log.e("Parse Exception " + e + "");
         } catch (Exception e) {
-            Log.e("Unknown Exception " + e + "");
+            logError(e);
         }
 
         return accounts;
@@ -352,10 +356,8 @@ public class WAPIClient extends Binder {
                 reflections.add(new Reflection(jsonO));
             }
             Log.d("json=" + json);
-        } catch (ParseException e) {
-            Log.e("Parse Exception " + e + "");
         } catch (Exception e) {
-            Log.e("Unknown Exception " + e + "");
+            logError(e);
         }
 
         return reflections;
@@ -368,10 +370,8 @@ public class WAPIClient extends Binder {
             Log.d("url: " + url);
             pictureBytes = this.getByteArray(url, true);
             Log.d("pictureBytes=" + pictureBytes.length);
-        } catch (ParseException e) {
-            Log.e("Parse Exception " + e + "");
         } catch (Exception e) {
-            Log.e("Unknown Exception " + e + "");
+            logError(e);
         }
 
         return pictureBytes;
@@ -393,5 +393,39 @@ public class WAPIClient extends Binder {
         public String wapiSearchReflections;
         public String wapiLoadPicture;
     }
+
+    public abstract class RequestRefreshAccessTokenAsyncTask extends AsyncTask<Void, Integer, Boolean> {
+        @Override
+        protected Boolean doInBackground(Void... voids) {
+            return WAPIClient.this.requestRefreshAccessToken();
+        }
+
+        @Override
+        protected abstract void onPostExecute(Boolean result);
+    }
+
+
+
+    public abstract class RequestNextReflectionsAsyncTask extends AsyncTask<String, Integer, List<Reflection>> {
+        @Override
+        protected List<Reflection> doInBackground(String... strings) {
+            String wac = strings[0];
+            return WAPIClient.this.requestNextReflections(wac);
+        }
+
+        @Override
+        protected abstract void onPostExecute(List<Reflection> reflections);
+    }
+
+    public abstract class RequestRequestBusinessAccountsAsyncTask extends AsyncTask<Void, Integer, List<Account>> {
+        @Override
+        protected List<Account> doInBackground(Void... voids) {
+            return WAPIClient.this.requestBusinessAccounts();
+        }
+
+        @Override
+        protected abstract void onPostExecute(List<Account> accounts);
+    }
+
 
 }

@@ -2,14 +2,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="fr.fitoussoft.wapisdk.AuthActivity">
+    tools:context=".activities.ReflectionsActivity">
 
     <ListView xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/reflections"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:context=".activities.ReflectionsActivity">
+        android:layout_height="match_parent">
 
     </ListView>
 
