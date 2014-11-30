@@ -1,7 +1,6 @@
 package fr.fitoussoft.wapitry.activities;
 
 import android.app.Activity;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,12 +17,14 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-import fr.fitoussoft.wapisdk.activities.AuthActivity;
-import fr.fitoussoft.wapisdk.helpers.WAPIClient;
+import fr.fitoussoft.wapisdk.activities.IWapiActivity;
+import fr.fitoussoft.wapisdk.tasks.RequestNextReflectionsAsyncTask;
+import fr.fitoussoft.wapisdk.helpers.WapiClient;
 import fr.fitoussoft.wapisdk.models.Reflection;
+import fr.fitoussoft.wapitry.Application;
 import fr.fitoussoft.wapitry.R;
 
-public class ReflectionsActivity extends Activity {
+public class ReflectionsActivity extends Activity implements IWapiActivity {
 
     private List<Reflection> reflections;
     private String wac;
@@ -46,17 +47,11 @@ public class ReflectionsActivity extends Activity {
         progressBar.setVisibility(View.INVISIBLE);
 
         if (reflections == null) {
-            WAPIClient client = AuthActivity.getClient();
-            if (client.hasToAuthenticate()) {
-                WAPIClient.navigateToAuth(this);
-                return;
-            }
-
             reflections = new ArrayList<Reflection>();
         }
 
         if (reflectionsAdapter == null) {
-            reflectionsAdapter = new ArrayAdapter<Reflection>(this, R.layout.reflection_item, reflections) {
+            reflectionsAdapter = new ArrayAdapter<Reflection>(ReflectionsActivity.this, R.layout.reflection_item, reflections) {
 
                 @Override
                 public View getView(int position, View convertView, ViewGroup parent) {
@@ -85,12 +80,6 @@ public class ReflectionsActivity extends Activity {
         ListView listView = (ListView) findViewById(R.id.reflections);
         listView.setOnScrollListener(new EndlessScrollListener());
         listView.setAdapter(reflectionsAdapter);
-
-
-        progressBar.setVisibility(View.VISIBLE);
-        AuthActivity.getClient().nextSkip = 0;
-        ReflectionsAsyncTask task = new ReflectionsAsyncTask();
-        task.execute(wac);
     }
 
     @Override
@@ -107,29 +96,41 @@ public class ReflectionsActivity extends Activity {
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
         if (id == R.id.option_disconnect) {
-            AuthActivity.getClient().disconnect(this);
+            ((Application) getApplication()).getWapiClient().disconnect(this);
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    public class ReflectionsAsyncTask extends AsyncTask<String, Integer, List<Reflection>> {
-        @Override
-        protected List<Reflection> doInBackground(String... strings) {
-            WAPIClient client = AuthActivity.getClient();
-            return client.nextRequestReflections(strings[0]);
-        }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        ((Application) getApplication()).getWapiClient().verifyAuthentication(this);
+    }
 
-        @Override
-        protected void onPostExecute(List<Reflection> list) {
-            if (list != null) {
-                //reflectionsAdapter.clear();
-                reflectionsAdapter.addAll(list);
+    @Override
+    public void onAuthenticated(final WapiClient wapiClient) {
+        progressBar.setVisibility(View.VISIBLE);
+        reflections.clear();
+        wapiClient.nextSkipReflectionRequest = 0;
+        executeRequestNextReflectionsAsyncTask(wapiClient);
+    }
+
+    private RequestNextReflectionsAsyncTask executeRequestNextReflectionsAsyncTask(WapiClient wapiClient) {
+        RequestNextReflectionsAsyncTask task = new RequestNextReflectionsAsyncTask(wapiClient) {
+            @Override
+            protected void onPostExecute(List<Reflection> reflections) {
+                if (reflections != null) {
+                    reflectionsAdapter.addAll(reflections);
+                }
+
+                progressBar.setVisibility(View.INVISIBLE);
             }
-
-            progressBar.setVisibility(View.INVISIBLE);
-        }
+        };
+        task.getParams().put(RequestNextReflectionsAsyncTask.PARAM_WAC, wac);
+        task.execute();
+        return task;
     }
 
     public class EndlessScrollListener implements AbsListView.OnScrollListener {
@@ -161,13 +162,10 @@ public class ReflectionsActivity extends Activity {
                 // I load the next page of gigs using a background task,
                 // but you can call any function here.
                 progressBar.setVisibility(View.VISIBLE);
-                ReflectionsAsyncTask task = new ReflectionsAsyncTask();
                 Log.d("[TRY]", "execute from scroll");
-                task.execute(wac);
+                executeRequestNextReflectionsAsyncTask(((Application) getApplication()).getWapiClient());
                 loading = true;
             }
-
-            //Log.d("[TRY]", String.format("totalItemCount:%1$d, previousTotal:%2$d, visibleItemCount:%3$d, firstVisibleItem:%4$d", totalItemCount, previousTotal, visibleItemCount, firstVisibleItem));
         }
 
         @Override
@@ -175,3 +173,4 @@ public class ReflectionsActivity extends Activity {
         }
     }
 }
+

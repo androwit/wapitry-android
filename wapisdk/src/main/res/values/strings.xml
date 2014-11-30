@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <string name="redirect_uri">http://localhost</string>
     <string name="title_activity_auth">Identification</string>
     <string name="icon_size">Medium</string>
-
 </resources>

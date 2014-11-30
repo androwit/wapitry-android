@@ -12,6 +12,9 @@ import fr.fitoussoft.wapisdk.helpers.Log;
  */
 public class Account extends Model {
 
+    private final static String JSON_FIELD_PICTURE = "picture";
+    private final static String JSON_FIELD_WAC = "wac";
+
     private String pictureId;
     private byte[] pictureBytes;
     private Bitmap picture;
@@ -26,8 +29,8 @@ public class Account extends Model {
         super.parse(json);
 
         try {
-            pictureId = json.getString("picture");
-            wac = json.getString("wac");
+            pictureId = json.getString(JSON_FIELD_PICTURE);
+            wac = json.getString(JSON_FIELD_WAC);
         } catch (JSONException e) {
             Log.d(String.format("error during parse of %s.", Account.class.toString()));
         }
