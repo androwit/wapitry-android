@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fr.fitoussoft.wapisdk.activities.IWapiActivity;
+import fr.fitoussoft.wapisdk.tasks.RequestNextReflectionsAsyncTask;
 import fr.fitoussoft.wapisdk.helpers.WAPIClient;
 import fr.fitoussoft.wapisdk.models.Reflection;
 import fr.fitoussoft.wapitry.Application;
@@ -112,12 +113,12 @@ public class ReflectionsActivity extends Activity implements IWapiActivity {
     public void onAuthenticated(final WAPIClient wapiClient) {
         progressBar.setVisibility(View.VISIBLE);
         reflections.clear();
-        wapiClient.nextSkip = 0;
+        wapiClient.nextSkipReflectionRequest = 0;
         executeRequestNextReflectionsAsyncTask(wapiClient);
     }
 
-    private WAPIClient.RequestNextReflectionsAsyncTask executeRequestNextReflectionsAsyncTask(WAPIClient wapiClient) {
-        WAPIClient.RequestNextReflectionsAsyncTask task = wapiClient.new RequestNextReflectionsAsyncTask() {
+    private RequestNextReflectionsAsyncTask executeRequestNextReflectionsAsyncTask(WAPIClient wapiClient) {
+        RequestNextReflectionsAsyncTask task = new RequestNextReflectionsAsyncTask(wapiClient) {
             @Override
             protected void onPostExecute(List<Reflection> reflections) {
                 if (reflections != null) {
@@ -127,7 +128,7 @@ public class ReflectionsActivity extends Activity implements IWapiActivity {
                 progressBar.setVisibility(View.INVISIBLE);
             }
         };
-        task.getParams().put(WAPIClient.RequestNextReflectionsAsyncTask.PARAM_WAC, wac);
+        task.getParams().put(RequestNextReflectionsAsyncTask.PARAM_WAC, wac);
         task.execute();
         return task;
     }
@@ -165,8 +166,6 @@ public class ReflectionsActivity extends Activity implements IWapiActivity {
                 executeRequestNextReflectionsAsyncTask(((Application) getApplication()).getWapiClient());
                 loading = true;
             }
-
-            //Log.d("[TRY]", String.format("totalItemCount:%1$d, previousTotal:%2$d, visibleItemCount:%3$d, firstVisibleItem:%4$d", totalItemCount, previousTotal, visibleItemCount, firstVisibleItem));
         }
 
         @Override

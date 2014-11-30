@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fr.fitoussoft.wapisdk.activities.IWapiActivity;
+import fr.fitoussoft.wapisdk.tasks.RequestBusinessAccountsAsyncTask;
+import fr.fitoussoft.wapisdk.tasks.RequestPictureAsyncTask;
 import fr.fitoussoft.wapisdk.helpers.WAPIClient;
 import fr.fitoussoft.wapisdk.models.Account;
 import fr.fitoussoft.wapitry.Application;
@@ -32,17 +34,17 @@ public class AccountsActivity extends Activity implements IWapiActivity {
     private ArrayAdapter<Account> accountsAdapter;
     private ProgressBar progressBar;
 
-    private void displayAccounts(final WAPIClient wapiClient) {
-        WAPIClient.RequestBusinessAccountsAsyncTask task = wapiClient.new RequestBusinessAccountsAsyncTask() {
+    private void displayAccounts(WAPIClient wapiClient) {
+        RequestBusinessAccountsAsyncTask task = new RequestBusinessAccountsAsyncTask(wapiClient) {
             @Override
             protected void onPostExecute(List<Account> accounts) {
                 if (accounts != null) {
                     accountsAdapter.addAll(accounts);
                 }
 
-                WAPIClient.RequestPictureAsyncTask task;
+                RequestPictureAsyncTask task;
                 for (final Account account : accounts) {
-                    task = wapiClient.new RequestPictureAsyncTask() {
+                    task = new RequestPictureAsyncTask(wapiClient) {
 
                         @Override
                         protected void onPostExecute(byte[] pictureBytes) {
@@ -53,8 +55,8 @@ public class AccountsActivity extends Activity implements IWapiActivity {
                         }
                     };
 
-                    task.getParams().put(WAPIClient.RequestPictureAsyncTask.PARAM_ID, account.getPictureId());
-                    task.getParams().put(WAPIClient.RequestPictureAsyncTask.PARAM_SIZE,  AccountsActivity.this.getResources().getString(fr.fitoussoft.wapisdk.R.string.icon_size));
+                    task.getParams().put(RequestPictureAsyncTask.PARAM_ID, account.getPictureId());
+                    task.getParams().put(RequestPictureAsyncTask.PARAM_SIZE,  AccountsActivity.this.getResources().getString(fr.fitoussoft.wapisdk.R.string.icon_size));
                     task.execute();
                 }
 

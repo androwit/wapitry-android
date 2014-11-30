@@ -17,13 +17,14 @@ import java.io.UnsupportedEncodingException;
 import fr.fitoussoft.wapisdk.IWapiApplication;
 import fr.fitoussoft.wapisdk.R;
 import fr.fitoussoft.wapisdk.helpers.Log;
+import fr.fitoussoft.wapisdk.tasks.RequestAccessTokenAsyncTask;
 import fr.fitoussoft.wapisdk.helpers.WAPIClient;
 
 public class AuthActivity extends Activity implements IWapiActivity {
 
     private WebView loginWebView;
     private WebViewClient loginWebViewClient;
-    private WAPIClient.RequestAccessTokenAsyncTask requestAccessTask;
+    private RequestAccessTokenAsyncTask requestAccessTask;
 
     private WAPIClient getWapiClient() {
         return ((IWapiApplication) this.getApplication()).getWapiClient();
@@ -65,7 +66,7 @@ public class AuthActivity extends Activity implements IWapiActivity {
                     view.setVisibility(View.INVISIBLE);
 
                     // use code in POST request to get token.
-                    requestAccessTask.getParams().put(WAPIClient.PARAM_CODE, code);
+                    requestAccessTask.getParams().put(RequestAccessTokenAsyncTask.PARAM_CODE, code);
                     requestAccessTask.execute();
                     return;
                 }
@@ -116,7 +117,7 @@ public class AuthActivity extends Activity implements IWapiActivity {
         }
 
         if (requestAccessTask == null) {
-            requestAccessTask = client.new RequestAccessTokenAsyncTask() {
+            requestAccessTask = new RequestAccessTokenAsyncTask(client) {
 
                 @Override
                 protected void onPostExecute(Boolean result) {
