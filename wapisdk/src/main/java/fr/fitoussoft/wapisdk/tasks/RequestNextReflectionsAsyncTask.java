@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fr.fitoussoft.wapisdk.helpers.Log;
-import fr.fitoussoft.wapisdk.helpers.WAPIClient;
+import fr.fitoussoft.wapisdk.helpers.WapiClient;
 import fr.fitoussoft.wapisdk.models.Reflection;
 import fr.fitoussoft.wapisdk.requests.IRequestBase;
 import fr.fitoussoft.wapisdk.requests.RequestString;
@@ -26,7 +26,7 @@ public abstract class RequestNextReflectionsAsyncTask extends RequestAsyncTaskBa
     protected final static String PARAM_TAKE = "take";
     private final static String JSON_FIELD_REFLECTIONS = "reflections";
 
-    public RequestNextReflectionsAsyncTask(WAPIClient wapiClient) {
+    public RequestNextReflectionsAsyncTask(WapiClient wapiClient) {
         super(wapiClient);
     }
 

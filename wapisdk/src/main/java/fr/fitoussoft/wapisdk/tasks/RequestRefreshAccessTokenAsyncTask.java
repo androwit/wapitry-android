@@ -5,7 +5,7 @@ import org.apache.http.client.methods.HttpPost;
 
 import java.util.List;
 
-import fr.fitoussoft.wapisdk.helpers.WAPIClient;
+import fr.fitoussoft.wapisdk.helpers.WapiClient;
 import fr.fitoussoft.wapisdk.requests.RequestString;
 
 /**
@@ -13,7 +13,7 @@ import fr.fitoussoft.wapisdk.requests.RequestString;
 */
 public abstract class RequestRefreshAccessTokenAsyncTask extends RequestAccessTokenAsyncTask {
 
-    public RequestRefreshAccessTokenAsyncTask(WAPIClient wapiClient) {
+    public RequestRefreshAccessTokenAsyncTask(WapiClient wapiClient) {
         super(wapiClient);
     }
 

@@ -26,24 +26,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fr.fitoussoft.wapisdk.helpers.PermisiveSSLSocketFactory;
-import fr.fitoussoft.wapisdk.helpers.WAPIClient;
+import fr.fitoussoft.wapisdk.helpers.WapiClient;
 
 /**
 * Created by emmanuel.fitoussi on 30/11/2014.
 */
 public abstract class RequestBase<T extends HttpRequestBase, U> implements IRequestBase<U> {
-    private WAPIClient wapiClient;
+    private WapiClient wapiClient;
     protected boolean isWithAccessToken = false;
     protected String url;
     protected T httpMethod;
     protected U response;
     protected List<NameValuePair> params;
 
-    public RequestBase(WAPIClient wapiClient, String url, boolean isWithAccessToken, Class<T> httpMethodClass) {
+    public RequestBase(WapiClient wapiClient, String url, boolean isWithAccessToken, Class<T> httpMethodClass) {
         this(wapiClient, url, null, isWithAccessToken, httpMethodClass);
     }
 
-    public RequestBase(WAPIClient wapiClient, String url, List<NameValuePair> params, boolean isWithAccessToken, Class<T> httpMethodClass) {
+    public RequestBase(WapiClient wapiClient, String url, List<NameValuePair> params, boolean isWithAccessToken, Class<T> httpMethodClass) {
         this.wapiClient = wapiClient;
         try {
             this.url = url;

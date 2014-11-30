@@ -6,7 +6,7 @@ import org.apache.http.client.methods.HttpGet;
 import java.util.List;
 
 import fr.fitoussoft.wapisdk.helpers.Log;
-import fr.fitoussoft.wapisdk.helpers.WAPIClient;
+import fr.fitoussoft.wapisdk.helpers.WapiClient;
 import fr.fitoussoft.wapisdk.requests.IRequestBase;
 import fr.fitoussoft.wapisdk.requests.RequestByteArray;
 
@@ -18,7 +18,7 @@ public abstract class RequestPictureAsyncTask extends RequestAsyncTaskBase<byte[
     public static final String PARAM_ID = "id";
     public static final String PARAM_SIZE = "size";
 
-    public RequestPictureAsyncTask(WAPIClient wapiClient) {
+    public RequestPictureAsyncTask(WapiClient wapiClient) {
         super(wapiClient);
     }
 

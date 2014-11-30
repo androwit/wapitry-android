@@ -8,7 +8,7 @@ import java.util.Calendar;
 /**
  * Created by emmanuel.fitoussi on 24/11/2014.
  */
-public class WAPIToken {
+public class WapiToken {
     private final static String PREF_ACCESS_TOKEN = "accessToken";
     private final static String PREF_REFRESH_TOKEN = "refreshToken";
     private final static String PREF_EXPIRE_TIME = "expireTime";
@@ -21,7 +21,7 @@ public class WAPIToken {
     private Calendar expireDate;
     private SharedPreferences prefs;
 
-    public WAPIToken(SharedPreferences prefs, boolean isDebug) {
+    public WapiToken(SharedPreferences prefs, boolean isDebug) {
         this.prefs = prefs;
         this.isDebug = isDebug;
         this.loadTokens();

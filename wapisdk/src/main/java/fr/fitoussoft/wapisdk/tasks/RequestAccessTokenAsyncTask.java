@@ -8,7 +8,7 @@ import org.json.JSONObject;
 
 import java.util.List;
 
-import fr.fitoussoft.wapisdk.helpers.WAPIClient;
+import fr.fitoussoft.wapisdk.helpers.WapiClient;
 import fr.fitoussoft.wapisdk.requests.RequestString;
 
 /**
@@ -27,7 +27,7 @@ public abstract class RequestAccessTokenAsyncTask extends RequestAsyncTaskBase<B
     private final static String JSON_FIELD_REFRESH_TOKEN = "refresh_token";
     private final static String JSON_FIELD_EXPIRES_IN = "expires_in";
 
-    public RequestAccessTokenAsyncTask(WAPIClient wapiClient) {
+    public RequestAccessTokenAsyncTask(WapiClient wapiClient) {
         super(wapiClient);
     }
 

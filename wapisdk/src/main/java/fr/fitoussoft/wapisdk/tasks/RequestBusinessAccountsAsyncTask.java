@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import fr.fitoussoft.wapisdk.helpers.Log;
-import fr.fitoussoft.wapisdk.helpers.WAPIClient;
+import fr.fitoussoft.wapisdk.helpers.WapiClient;
 import fr.fitoussoft.wapisdk.models.Account;
 import fr.fitoussoft.wapisdk.requests.RequestString;
 
@@ -18,7 +18,7 @@ import fr.fitoussoft.wapisdk.requests.RequestString;
  */
 public abstract class RequestBusinessAccountsAsyncTask extends RequestAsyncTaskBase<List<Account>, String> {
 
-    public RequestBusinessAccountsAsyncTask(WAPIClient wapiClient) {
+    public RequestBusinessAccountsAsyncTask(WapiClient wapiClient) {
         super(wapiClient);
     }
 

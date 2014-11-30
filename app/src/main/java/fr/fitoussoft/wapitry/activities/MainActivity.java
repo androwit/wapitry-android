@@ -7,7 +7,7 @@ import android.util.Log;
 
 import fr.fitoussoft.wapisdk.IWapiApplication;
 import fr.fitoussoft.wapisdk.activities.IWapiActivity;
-import fr.fitoussoft.wapisdk.helpers.WAPIClient;
+import fr.fitoussoft.wapisdk.helpers.WapiClient;
 import fr.fitoussoft.wapitry.R;
 
 public class MainActivity extends Activity implements IWapiActivity {
@@ -32,7 +32,7 @@ public class MainActivity extends Activity implements IWapiActivity {
     }
 
     @Override
-    public void onAuthenticated(WAPIClient wapiClient) {
+    public void onAuthenticated(WapiClient wapiClient) {
         navigateToAccounts();
     }
 }

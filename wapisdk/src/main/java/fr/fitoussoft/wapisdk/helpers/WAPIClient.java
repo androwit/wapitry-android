@@ -21,15 +21,15 @@ import fr.fitoussoft.wapisdk.tasks.RequestRefreshAccessTokenAsyncTask;
 /**
  * Created by emmanuel.fitoussi on 07/10/2014.
  */
-public class WAPIClient {
+public class WapiClient {
     public static boolean DEBUG = true;
     public int nextSkipReflectionRequest = 0;
     private Configuration config;
 
     private Context context;
-    private WAPIToken token;
+    private WapiToken token;
 
-    public WAPIClient(Context context, SharedPreferences prefs) {
+    public WapiClient(Context context, SharedPreferences prefs) {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().detectAll().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
@@ -39,7 +39,7 @@ public class WAPIClient {
         config = new Configuration(res, DEBUG);
 
         // restore stored tokens
-        token = new WAPIToken(prefs, DEBUG);
+        token = new WapiToken(prefs, DEBUG);
     }
 
     private static void navigateToAuth(Activity activity) {
@@ -47,7 +47,7 @@ public class WAPIClient {
         activity.startActivityForResult(myIntent, 0);
     }
 
-    public WAPIToken getToken() {
+    public WapiToken getToken() {
         return token;
     }
 
@@ -63,14 +63,14 @@ public class WAPIClient {
 
                 @Override
                 public void onReceiveValue(Boolean aBoolean) {
-                    WAPIClient.navigateToAuth(activity);
+                    WapiClient.navigateToAuth(activity);
                 }
             });
         } else {
             CookieSyncManager.createInstance(context);
             CookieManager cookieManager = CookieManager.getInstance();
             cookieManager.removeAllCookie();
-            WAPIClient.navigateToAuth(activity);
+            WapiClient.navigateToAuth(activity);
         }
     }
 
@@ -102,7 +102,7 @@ public class WAPIClient {
             RequestRefreshAccessTokenAsyncTask task = new RequestRefreshAccessTokenAsyncTask(this) {
                 @Override
                 protected void onPostExecute(Boolean result) {
-                    originActivity.onAuthenticated(WAPIClient.this);
+                    originActivity.onAuthenticated(WapiClient.this);
                 }
             };
             task.execute();

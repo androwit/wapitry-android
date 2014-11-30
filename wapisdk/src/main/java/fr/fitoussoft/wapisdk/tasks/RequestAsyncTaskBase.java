@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import fr.fitoussoft.wapisdk.helpers.WAPIClient;
+import fr.fitoussoft.wapisdk.helpers.WapiClient;
 import fr.fitoussoft.wapisdk.requests.IRequestBase;
 
 /**
@@ -17,11 +17,11 @@ import fr.fitoussoft.wapisdk.requests.IRequestBase;
 */
 public abstract class RequestAsyncTaskBase<V, R> extends AsyncTask<Void, Integer, V> {
 
-    protected WAPIClient wapiClient;
+    protected WapiClient wapiClient;
     protected IRequestBase<R> request;
     protected Parameters params;
 
-    public RequestAsyncTaskBase(WAPIClient wapiClient) {
+    public RequestAsyncTaskBase(WapiClient wapiClient) {
         this.wapiClient = wapiClient;
         this.params = createParams();
     }

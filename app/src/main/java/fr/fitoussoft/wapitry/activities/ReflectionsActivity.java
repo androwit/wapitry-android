@@ -19,7 +19,7 @@ import java.util.List;
 
 import fr.fitoussoft.wapisdk.activities.IWapiActivity;
 import fr.fitoussoft.wapisdk.tasks.RequestNextReflectionsAsyncTask;
-import fr.fitoussoft.wapisdk.helpers.WAPIClient;
+import fr.fitoussoft.wapisdk.helpers.WapiClient;
 import fr.fitoussoft.wapisdk.models.Reflection;
 import fr.fitoussoft.wapitry.Application;
 import fr.fitoussoft.wapitry.R;
@@ -110,14 +110,14 @@ public class ReflectionsActivity extends Activity implements IWapiActivity {
     }
 
     @Override
-    public void onAuthenticated(final WAPIClient wapiClient) {
+    public void onAuthenticated(final WapiClient wapiClient) {
         progressBar.setVisibility(View.VISIBLE);
         reflections.clear();
         wapiClient.nextSkipReflectionRequest = 0;
         executeRequestNextReflectionsAsyncTask(wapiClient);
     }
 
-    private RequestNextReflectionsAsyncTask executeRequestNextReflectionsAsyncTask(WAPIClient wapiClient) {
+    private RequestNextReflectionsAsyncTask executeRequestNextReflectionsAsyncTask(WapiClient wapiClient) {
         RequestNextReflectionsAsyncTask task = new RequestNextReflectionsAsyncTask(wapiClient) {
             @Override
             protected void onPostExecute(List<Reflection> reflections) {

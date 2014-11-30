@@ -24,7 +24,7 @@ import java.util.List;
 import fr.fitoussoft.wapisdk.activities.IWapiActivity;
 import fr.fitoussoft.wapisdk.tasks.RequestBusinessAccountsAsyncTask;
 import fr.fitoussoft.wapisdk.tasks.RequestPictureAsyncTask;
-import fr.fitoussoft.wapisdk.helpers.WAPIClient;
+import fr.fitoussoft.wapisdk.helpers.WapiClient;
 import fr.fitoussoft.wapisdk.models.Account;
 import fr.fitoussoft.wapitry.Application;
 import fr.fitoussoft.wapitry.R;
@@ -34,7 +34,7 @@ public class AccountsActivity extends Activity implements IWapiActivity {
     private ArrayAdapter<Account> accountsAdapter;
     private ProgressBar progressBar;
 
-    private void displayAccounts(WAPIClient wapiClient) {
+    private void displayAccounts(WapiClient wapiClient) {
         RequestBusinessAccountsAsyncTask task = new RequestBusinessAccountsAsyncTask(wapiClient) {
             @Override
             protected void onPostExecute(List<Account> accounts) {
@@ -157,7 +157,7 @@ public class AccountsActivity extends Activity implements IWapiActivity {
     }
 
     @Override
-    public void onAuthenticated(WAPIClient wapiClient) {
+    public void onAuthenticated(WapiClient wapiClient) {
         displayAccounts(wapiClient);
     }
 }

@@ -18,7 +18,7 @@ import fr.fitoussoft.wapisdk.IWapiApplication;
 import fr.fitoussoft.wapisdk.R;
 import fr.fitoussoft.wapisdk.helpers.Log;
 import fr.fitoussoft.wapisdk.tasks.RequestAccessTokenAsyncTask;
-import fr.fitoussoft.wapisdk.helpers.WAPIClient;
+import fr.fitoussoft.wapisdk.helpers.WapiClient;
 
 public class AuthActivity extends Activity implements IWapiActivity {
 
@@ -26,7 +26,7 @@ public class AuthActivity extends Activity implements IWapiActivity {
     private WebViewClient loginWebViewClient;
     private RequestAccessTokenAsyncTask requestAccessTask;
 
-    private WAPIClient getWapiClient() {
+    private WapiClient getWapiClient() {
         return ((IWapiApplication) this.getApplication()).getWapiClient();
     }
 
@@ -77,7 +77,7 @@ public class AuthActivity extends Activity implements IWapiActivity {
         };
     }
 
-    private void authenticate(WAPIClient client) {
+    private void authenticate(WapiClient client) {
         Resources res = getResources();
         String url = String.format(client.getConfig().wapiAuthorise,
                 client.getConfig().clientId,
@@ -100,7 +100,7 @@ public class AuthActivity extends Activity implements IWapiActivity {
         Log.d("Auth onResume.");
         super.onResume();
 
-        WAPIClient client = getWapiClient();
+        WapiClient client = getWapiClient();
 
         // setup.
         if (loginWebView == null) {
@@ -132,7 +132,7 @@ public class AuthActivity extends Activity implements IWapiActivity {
     }
 
     @Override
-    public void onAuthenticated(WAPIClient wapiClient) {
+    public void onAuthenticated(WapiClient wapiClient) {
         // nothing to do.
     }
 }
