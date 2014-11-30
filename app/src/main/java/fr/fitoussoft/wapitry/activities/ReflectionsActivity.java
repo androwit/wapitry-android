@@ -127,7 +127,8 @@ public class ReflectionsActivity extends Activity implements IWapiActivity {
                 progressBar.setVisibility(View.INVISIBLE);
             }
         };
-        task.execute(wac);
+        task.getParams().put(WAPIClient.RequestNextReflectionsAsyncTask.PARAM_WAC, wac);
+        task.execute();
         return task;
     }
 

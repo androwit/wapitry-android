@@ -5,8 +5,8 @@
     <string name="wapi_authorise">https://developer.wit-datacenter.com/oauth/authorize?client_id=%1$s&amp;response_type=code&amp;redirect_uri=%2$s&amp;scope=https://api.wit-datacenter.com</string>
     <string name="wapi_token">https://developer.wit-datacenter.com/oauth/token</string>
     <string name="wapi_GetBusinessAccountsMy">https://api.wit-datacenter.com/BusinessAccount/My</string>
-    <string name="wapi_SearchReflections">https://api.wit-datacenter.com/%1$s/Reflection?skip=%2$d&amp;take=%3$d</string>
-    <string name="wapi_LoadPicture">http://api.wit-datacenter.com/Picture/%1$s/%1$s</string>
+    <string name="wapi_SearchReflections">https://api.wit-datacenter.com/[WAC]/Reflection</string>
+    <string name="wapi_LoadPicture">http://api.wit-datacenter.com/Picture/[id]/[size]</string>
 
     <!--beta-->
     <string name="client_id_beta">WAPITRY_LLF212</string>
@@ -14,6 +14,6 @@
     <string name="wapi_authorise_beta">https://beta.wit-datacenter.com/developer/oauth/authorize?client_id=%1$s&amp;response_type=code&amp;redirect_uri=%2$s&amp;scope=https://api.wit-datacenter.com</string>
     <string name="wapi_token_beta">http://beta.wit-datacenter.com/developer/oauth/token</string>
     <string name="wapi_GetBusinessAccountsMy_beta">http://beta.wit-datacenter.com/wapi/BusinessAccount/My</string>
-    <string name="wapi_SearchReflections_beta">http://beta.wit-datacenter.com/wapi/%1$s/Reflection?skip=%2$d&amp;take=%3$d</string>
-    <string name="wapi_LoadPicture_beta">http://beta.wit-datacenter.com/wapi/Picture/%1$s/%2$s</string>
+    <string name="wapi_SearchReflections_beta">http://beta.wit-datacenter.com/wapi/[WAC]/Reflection</string>
+    <string name="wapi_LoadPicture_beta">http://beta.wit-datacenter.com/wapi/Picture/[id]/[size]</string>
 </resources>

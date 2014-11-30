@@ -1,10 +1,10 @@
 package fr.fitoussoft.wapisdk.activities;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.net.http.SslError;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
 import android.webkit.SslErrorHandler;
@@ -23,27 +23,10 @@ public class AuthActivity extends Activity implements IWapiActivity {
 
     private WebView loginWebView;
     private WebViewClient loginWebViewClient;
-    private AsyncTask<String, Integer, Boolean> requestAccessTask;
+    private WAPIClient.RequestAccessTokenAsyncTask requestAccessTask;
 
     private WAPIClient getWapiClient() {
         return ((IWapiApplication) this.getApplication()).getWapiClient();
-    }
-
-    private AsyncTask<String, Integer, Boolean> createRequestAsyncTask() {
-        return new AsyncTask<String, Integer, Boolean>() {
-            @Override
-            protected Boolean doInBackground(String... strings) {
-                WAPIClient client = getWapiClient();
-                return client.requestAccessToken(strings[0]);
-            }
-
-            @Override
-            protected void onPostExecute(Boolean aBoolean) {
-                if (aBoolean) {
-                    AuthActivity.this.finish();
-                }
-            }
-        };
     }
 
     private WebViewClient createWebViewClient() {
@@ -77,12 +60,13 @@ public class AuthActivity extends Activity implements IWapiActivity {
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 String code = this.extractCodeFromURL(url);
-                if(code != null) {
+                if (code != null) {
                     // hides WebView.
                     view.setVisibility(View.INVISIBLE);
 
                     // use code in POST request to get token.
-                    requestAccessTask.execute(code);
+                    requestAccessTask.getParams().put(WAPIClient.PARAM_CODE, code);
+                    requestAccessTask.execute();
                     return;
                 }
 
@@ -109,6 +93,7 @@ public class AuthActivity extends Activity implements IWapiActivity {
     }
 
 
+    @SuppressLint("SetJavaScriptEnabled")
     @Override
     protected void onResume() {
         Log.d("Auth onResume.");
@@ -131,7 +116,15 @@ public class AuthActivity extends Activity implements IWapiActivity {
         }
 
         if (requestAccessTask == null) {
-            requestAccessTask = createRequestAsyncTask();
+            requestAccessTask = client.new RequestAccessTokenAsyncTask() {
+
+                @Override
+                protected void onPostExecute(Boolean result) {
+                    if (result) {
+                        AuthActivity.this.finish();
+                    }
+                }
+            };
         }
 
         authenticate(client);

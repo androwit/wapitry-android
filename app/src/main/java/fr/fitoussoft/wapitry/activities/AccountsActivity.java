@@ -2,6 +2,8 @@ package fr.fitoussoft.wapitry.activities;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -30,12 +32,30 @@ public class AccountsActivity extends Activity implements IWapiActivity {
     private ArrayAdapter<Account> accountsAdapter;
     private ProgressBar progressBar;
 
-    private void displayAccounts(WAPIClient wapiClient) {
-        WAPIClient.RequestRequestBusinessAccountsAsyncTask task = wapiClient.new RequestRequestBusinessAccountsAsyncTask() {
+    private void displayAccounts(final WAPIClient wapiClient) {
+        WAPIClient.RequestBusinessAccountsAsyncTask task = wapiClient.new RequestBusinessAccountsAsyncTask() {
             @Override
             protected void onPostExecute(List<Account> accounts) {
                 if (accounts != null) {
                     accountsAdapter.addAll(accounts);
+                }
+
+                WAPIClient.RequestPictureAsyncTask task;
+                for (final Account account : accounts) {
+                    task = wapiClient.new RequestPictureAsyncTask() {
+
+                        @Override
+                        protected void onPostExecute(byte[] pictureBytes) {
+                            account.setPictureBytes(pictureBytes);
+                            Bitmap picture = BitmapFactory.decodeByteArray(pictureBytes, 0, pictureBytes.length);
+                            account.setPicture(picture);
+                            accountsAdapter.notifyDataSetChanged();
+                        }
+                    };
+
+                    task.getParams().put(WAPIClient.RequestPictureAsyncTask.PARAM_ID, account.getPictureId());
+                    task.getParams().put(WAPIClient.RequestPictureAsyncTask.PARAM_SIZE,  AccountsActivity.this.getResources().getString(fr.fitoussoft.wapisdk.R.string.icon_size));
+                    task.execute();
                 }
 
                 progressBar.setVisibility(View.INVISIBLE);

@@ -6,9 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.ParseException;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.StrictMode;
@@ -22,9 +19,11 @@ import org.apache.http.HttpVersion;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.scheme.Scheme;
@@ -39,10 +38,14 @@ import org.apache.http.params.HttpProtocolParams;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.net.URI;
 import java.security.KeyStore;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import fr.fitoussoft.wapisdk.R;
@@ -56,17 +59,6 @@ import fr.fitoussoft.wapisdk.models.Reflection;
  * Created by emmanuel.fitoussi on 07/10/2014.
  */
 public class WAPIClient {
-    private final static String PARAM_CLIENT_ID = "client_id";
-    private final static String PARAM_CLIENT_SECRET = "client_secret";
-    private final static String PARAM_CODE = "code";
-    private final static String PARAM_GRANT_TYPE = "grant_type";
-    private final static String PARAM_REDIRECT_URI = "redirect_uri";
-    private final static String PARAM_AUTHORIZATION_CODE = "authorization_code";
-    private final static String PARAM_REFRESH_TOKEN = "refresh_token";
-    private final static String JSON_FIELD_ACCESS_TOKEN = "access_token";
-    private final static String JSON_FIELD_REFRESH_TOKEN = "refresh_token";
-    private final static String JSON_FIELD_EXPIRES_IN = "expires_in";
-    private final static String JSON_FIELD_REFLECTIONS = "reflections";
     public static boolean DEBUG = true;
     public int nextSkip = 0;
     private Config config;
@@ -92,6 +84,7 @@ public class WAPIClient {
         config.wapiGetBusinessAcountsMy = res.getString(R.string.wapi_GetBusinessAccountsMy);
         config.wapiSearchReflections = res.getString(R.string.wapi_SearchReflections);
         config.wapiLoadPicture = res.getString(R.string.wapi_LoadPicture);
+        config.redirectUrl = res.getString(R.string.redirect_uri);
 
         if (DEBUG) {
             config.clientId = res.getString(R.string.client_id_beta);
@@ -193,195 +186,141 @@ public class WAPIClient {
         originActivity.onAuthenticated(this);
     }
 
-    public String get(String url, boolean withAccessToken) {
-        Log.d("GET " + url + ", with accessToken: " + withAccessToken);
-        HttpGet get = new HttpGet(url);
-        String responseText = null;
-        try {
-
-            if (withAccessToken) {
-                addAccessTokenToHeader(get);
-            }
-
-            HttpResponse response = httpClient.execute(get);
-            responseText = EntityUtils.toString(response.getEntity());
-        } catch (Exception e) {
-            logError(e);
-        }
-
-        Log.d(responseText);
-        return responseText;
-    }
-
     private void logError(Exception e) {
         Log.e("Parse Exception " + e + "");
         Toast.makeText(this._context, "ERROR: " + e.toString(), Toast.LENGTH_LONG).show();
-    }
-
-    // TODO refactor with get method
-    public byte[] getByteArray(String url, boolean withAccessToken) {
-        Log.d("GET " + url + ", with accessToken: " + withAccessToken);
-        HttpGet get = new HttpGet(url);
-        byte[] responseArray = null;
-        try {
-
-            if (withAccessToken) {
-                addAccessTokenToHeader(get);
-            }
-
-            HttpResponse response = httpClient.execute(get);
-            responseArray = EntityUtils.toByteArray(response.getEntity());
-        } catch (Exception e) {
-            logError(e);
-        }
-
-        return responseArray;
     }
 
     private void addAccessTokenToHeader(HttpRequestBase httpMethod) {
         httpMethod.addHeader("Authorization", "Bearer " + _token.getAccessToken());
     }
 
-    public String post(String url, List<NameValuePair> pairs, boolean withAccessToken) {
-        Log.d("POST " + url + ", with accessToken: " + withAccessToken);
-        HttpPost post = new HttpPost(url);
-        String responseText = null;
-        try {
-            if (pairs != null) {
-                post.setEntity(new UrlEncodedFormEntity(pairs));
+    /**
+     * Created by emmanuel.fitoussi on 29/11/2014.
+     */
+    public static interface IRequestBase<T> {
+        T execute();
+    }
+
+    public abstract class RequestBase<T extends HttpRequestBase, U> implements IRequestBase<U> {
+        protected boolean isWithAccessToken = false;
+        protected String url;
+        protected T httpMethod;
+        protected U response;
+        protected List<NameValuePair> params;
+
+        public RequestBase(String url, boolean isWithAccessToken, Class<T> httpMethodClass) {
+            this(url, null, isWithAccessToken, httpMethodClass);
+        }
+
+        public RequestBase(String url, List<NameValuePair> params, boolean isWithAccessToken, Class<T> httpMethodClass) {
+            try {
+                this.url = url;
+                this.isWithAccessToken = isWithAccessToken;
+                this.httpMethod = httpMethodClass.newInstance();
+                this.params = params;
+
+                if (this.isWithAccessToken) {
+                    addAccessTokenToHeader(httpMethod);
+                }
+
+                if (params != null) {
+                    String key;
+                    List<NameValuePair> newParams = new ArrayList<NameValuePair>(params);
+
+                    // replace url keys with params ad remove these params.
+                    for (NameValuePair param : params) {
+                        key = "\\[" + param.getName() + "\\]";
+                        if (url.matches(".*" + key + ".*")) {
+                            url = url.replaceAll(key, param.getValue());
+                            newParams.remove(param);
+                        }
+                    }
+
+                    if (httpMethod instanceof HttpEntityEnclosingRequestBase) {
+                        ((HttpEntityEnclosingRequestBase) httpMethod).setEntity(new UrlEncodedFormEntity(newParams));
+                    } else {
+                        url += "?" + URLEncodedUtils.format(newParams, "utf-8");
+                    }
+                }
+
+                this.httpMethod.setURI(URI.create(url));
+            } catch (Exception e) {
+                logError(e);
+            }
+        }
+
+        public List<NameValuePair> getParams() {
+            return params;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+
+        public U getResponse() {
+            return response;
+        }
+
+        public T getHttpMethod() {
+            return httpMethod;
+        }
+
+        public boolean isWithAccessToken() {
+            return isWithAccessToken;
+        }
+
+        @Override
+        public U execute() {
+            try {
+                response = castResponse(httpClient.execute(httpMethod));
+            } catch (Exception e) {
+                logError(e);
             }
 
-            if (withAccessToken) {
-                addAccessTokenToHeader(post);
+            return response;
+        }
+
+        protected abstract U castResponse(HttpResponse httpResponse);
+    }
+
+    public class RequestString<T extends HttpRequestBase> extends RequestBase<T, String> {
+
+        public RequestString(String url, boolean isWithAccessToken, Class<T> httpMethodClass) {
+            super(url, null, isWithAccessToken, httpMethodClass);
+        }
+
+        public RequestString(String url, List<NameValuePair> params, boolean isWithAccessToken, Class<T> httpMethodClass) {
+            super(url, params, isWithAccessToken, httpMethodClass);
+        }
+
+        @Override
+        protected String castResponse(HttpResponse httpResponse) {
+            try {
+                return EntityUtils.toString(httpResponse.getEntity());
+            } catch (IOException e) {
+                logError(e);
             }
 
-            HttpResponse response = httpClient.execute(post);
-            responseText = EntityUtils.toString(response.getEntity());
-        } catch (Exception e) {
-            logError(e);
+            return null;
+        }
+    }
+
+    public class RequestByteArray<T extends HttpRequestBase> extends RequestBase<T, byte[]> {
+
+        public RequestByteArray(String url, List<NameValuePair> params, boolean isWithAccessToken, Class<T> httpMethodClass) {
+            super(url, params, isWithAccessToken, httpMethodClass);
         }
 
-        Log.d(responseText);
-        return responseText;
-    }
-
-    public String post(String url, boolean withAccessToken) {
-        return this.post(url, null, withAccessToken);
-    }
-
-    public boolean requestAccessToken(String code) {
-        boolean result = false;
-        Resources res = _context.getResources();
-        List<NameValuePair> pairs = new ArrayList<NameValuePair>();
-        pairs.add(new BasicNameValuePair(PARAM_CLIENT_ID, config.clientId));
-        pairs.add(new BasicNameValuePair(PARAM_CLIENT_SECRET, config.clientSecret));
-        pairs.add(new BasicNameValuePair(PARAM_CODE, code));
-        pairs.add(new BasicNameValuePair(PARAM_GRANT_TYPE, PARAM_AUTHORIZATION_CODE));
-        pairs.add(new BasicNameValuePair(PARAM_REDIRECT_URI, res.getString(R.string.redirect_uri)));
-        try {
-            String responseText = this.post(config.wapiToken, pairs, false);
-            JSONObject json = new JSONObject(responseText);
-            _token.setTokens(json.getString(JSON_FIELD_ACCESS_TOKEN),
-                    json.getString(JSON_FIELD_REFRESH_TOKEN),
-                    json.getInt(JSON_FIELD_EXPIRES_IN));
-            result = true;
-        } catch (Exception e) {
-            logError(e);
-        }
-
-        return result;
-    }
-
-    public boolean requestRefreshAccessToken() {
-        boolean result = false;
-        List<NameValuePair> pairs = new ArrayList<NameValuePair>();
-        pairs.add(new BasicNameValuePair(PARAM_CLIENT_ID, config.clientId));
-        pairs.add(new BasicNameValuePair(PARAM_CLIENT_SECRET, config.clientSecret));
-        pairs.add(new BasicNameValuePair(PARAM_REFRESH_TOKEN, _token.getRefreshToken()));
-        pairs.add(new BasicNameValuePair(PARAM_GRANT_TYPE, PARAM_REFRESH_TOKEN));
-
-        try {
-            String responseText = this.post(config.wapiToken, pairs, false);
-            JSONObject json = new JSONObject(responseText);
-            _token.setTokens(json.getString(JSON_FIELD_ACCESS_TOKEN),
-                    json.getString(JSON_FIELD_REFRESH_TOKEN),
-                    json.getInt(JSON_FIELD_EXPIRES_IN));
-            result = true;
-        } catch (ParseException e) {
-            logError(e);
-        } catch (Exception e) {
-            Log.e("Unknown Exception " + e + "");
-            Toast.makeText(this._context, "ERROR: " + e.toString(), Toast.LENGTH_SHORT).show();
-        }
-
-        return result;
-    }
-
-    public List<Account> requestBusinessAccounts() {
-        List<Account> accounts = new ArrayList<Account>();
-        try {
-            String responseText = this.get(config.wapiGetBusinessAcountsMy, true);
-            JSONArray json = new JSONArray(responseText);
-            Account account;
-            Resources res = _context.getResources();
-            for (int i = 0; i < json.length(); i++) {
-                JSONObject jsonO = (JSONObject) json.get(i);
-                account = new Account(jsonO);
-                byte[] pictureBytes = requestPicture(account.getPictureId(), res.getString(R.string.icon_size));
-                account.setPictureBytes(pictureBytes);
-
-                Bitmap picture = BitmapFactory.decodeByteArray(pictureBytes, 0, pictureBytes.length);
-                account.setPicture(picture);
-
-                accounts.add(account);
-
+        @Override
+        protected byte[] castResponse(HttpResponse httpResponse) {
+            try {
+                return EntityUtils.toByteArray(httpResponse.getEntity());
+            } catch (IOException e) {
+                logError(e);
+                return null;
             }
-            Log.d("json=" + json);
-        } catch (Exception e) {
-            logError(e);
         }
-
-        return accounts;
-    }
-
-    public List<Reflection> requestReflections(String wac, int skip, int take) {
-        List<Reflection> reflections = new ArrayList<Reflection>();
-        try {
-            String url = String.format(config.wapiSearchReflections, wac, skip, take);
-            String responseText = this.get(url, true);
-            JSONObject jsonContainer = new JSONObject(responseText);
-            JSONArray json = jsonContainer.getJSONArray(JSON_FIELD_REFLECTIONS);
-            for (int i = 0; i < json.length(); i++) {
-                JSONObject jsonO = (JSONObject) json.get(i);
-                reflections.add(new Reflection(jsonO));
-            }
-            Log.d("json=" + json);
-        } catch (Exception e) {
-            logError(e);
-        }
-
-        return reflections;
-    }
-
-    public byte[] requestPicture(String id, String size) {
-        byte[] pictureBytes = null;
-        try {
-            String url = String.format(config.wapiLoadPicture, id, size);
-            Log.d("url: " + url);
-            pictureBytes = this.getByteArray(url, true);
-            Log.d("pictureBytes=" + pictureBytes.length);
-        } catch (Exception e) {
-            logError(e);
-        }
-
-        return pictureBytes;
-    }
-
-    public List<Reflection> requestNextReflections(String wac) {
-        int pageSize = 20;
-        int newSkip = nextSkip;
-        nextSkip += pageSize;
-        return requestReflections(wac, newSkip, pageSize);
     }
 
     public class Config {
@@ -392,40 +331,228 @@ public class WAPIClient {
         public String wapiGetBusinessAcountsMy;
         public String wapiSearchReflections;
         public String wapiLoadPicture;
+        public String redirectUrl;
     }
 
-    public abstract class RequestRefreshAccessTokenAsyncTask extends AsyncTask<Void, Integer, Boolean> {
+    public abstract class RequestAsyncTaskBase<V, R> extends AsyncTask<Void, Integer, V> {
+
+        protected IRequestBase<R> request;
+        protected Parameters params;
+
+        public RequestAsyncTaskBase() {
+            this.params = createParams();
+        }
+
+        public Parameters getParams() {
+            return params;
+        }
+
+        protected abstract IRequestBase<R> createRequest(List<NameValuePair> params);
+
+        protected abstract Parameters createParams();
+
         @Override
-        protected Boolean doInBackground(Void... voids) {
-            return WAPIClient.this.requestRefreshAccessToken();
+        protected V doInBackground(Void... voids) {
+            List<NameValuePair> params = new ArrayList<NameValuePair>();
+            for (String key : this.params.keySet()) {
+                params.add(new BasicNameValuePair(key, this.params.get(key)));
+            }
+
+            this.request = createRequest(params);
+            R responseResult = request.execute();
+            return onResponseDone(responseResult);
+        }
+
+        protected abstract V onResponseDone(R responseResult);
+
+        @Override
+        protected abstract void onPostExecute(V result);
+
+        public class Parameters extends HashMap<String, String> {
+        }
+    }
+
+    public abstract class RequestAccessTokenAsyncTask extends RequestAsyncTaskBase<Boolean, String> {
+
+        public final static String PARAM_CODE = "code";
+        protected final static String PARAM_CLIENT_ID = "client_id";
+        protected final static String PARAM_CLIENT_SECRET = "client_secret";
+        protected final static String PARAM_GRANT_TYPE = "grant_type";
+        protected final static String PARAM_REFRESH_TOKEN = "refresh_token";
+        private final static String PARAM_REDIRECT_URI = "redirect_uri";
+        private final static String PARAM_AUTHORIZATION_CODE = "authorization_code";
+        private final static String JSON_FIELD_ACCESS_TOKEN = "access_token";
+        private final static String JSON_FIELD_REFRESH_TOKEN = "refresh_token";
+        private final static String JSON_FIELD_EXPIRES_IN = "expires_in";
+
+        @Override
+        protected Parameters createParams() {
+            Parameters params = new Parameters();
+            params.put(PARAM_CODE, "");
+            return params;
+        }
+
+        @Override
+        protected RequestString<HttpPost> createRequest(List<NameValuePair> params) {
+            params.add(new BasicNameValuePair(PARAM_CLIENT_ID, config.clientId));
+            params.add(new BasicNameValuePair(PARAM_CLIENT_SECRET, config.clientSecret));
+            params.add(new BasicNameValuePair(PARAM_GRANT_TYPE, PARAM_AUTHORIZATION_CODE));
+            params.add(new BasicNameValuePair(PARAM_REDIRECT_URI, config.redirectUrl));
+            return new RequestString<HttpPost>(config.wapiToken, params, false, HttpPost.class);
+        }
+
+        @Override
+        protected Boolean onResponseDone(String responseResult) {
+            boolean result = false;
+            try {
+                JSONObject json = new JSONObject(responseResult);
+                _token.setTokens(json.getString(JSON_FIELD_ACCESS_TOKEN),
+                        json.getString(JSON_FIELD_REFRESH_TOKEN),
+                        json.getInt(JSON_FIELD_EXPIRES_IN));
+                result = true;
+            } catch (JSONException e) {
+                logError(e);
+            }
+
+            return result;
         }
 
         @Override
         protected abstract void onPostExecute(Boolean result);
     }
 
+    public abstract class RequestRefreshAccessTokenAsyncTask extends RequestAccessTokenAsyncTask {
 
-
-    public abstract class RequestNextReflectionsAsyncTask extends AsyncTask<String, Integer, List<Reflection>> {
         @Override
-        protected List<Reflection> doInBackground(String... strings) {
-            String wac = strings[0];
-            return WAPIClient.this.requestNextReflections(wac);
+        protected Parameters createParams() {
+            Parameters params = new Parameters();
+            params.put(PARAM_CLIENT_ID, config.clientId);
+            params.put(PARAM_CLIENT_SECRET, config.clientSecret);
+            params.put(PARAM_REFRESH_TOKEN, _token.getRefreshToken());
+            params.put(PARAM_GRANT_TYPE, PARAM_REFRESH_TOKEN);
+            return params;
         }
+
+        @Override
+        protected RequestString<HttpPost> createRequest(List<NameValuePair> params) {
+            return new RequestString<HttpPost>(config.wapiToken, params, false, HttpPost.class);
+        }
+
+        @Override
+        protected abstract void onPostExecute(Boolean result);
+    }
+
+    public abstract class RequestNextReflectionsAsyncTask extends RequestAsyncTaskBase<List<Reflection>, String> {
+
+        public final static String PARAM_WAC = "WAC";
+        public final static int PAGE_SIZE = 20;
+        protected final static String PARAM_SKIP = "skip";
+        protected final static String PARAM_TAKE = "take";
+        private final static String JSON_FIELD_REFLECTIONS = "reflections";
+
+
+        @Override
+        protected Parameters createParams() {
+            Parameters params = new Parameters();
+            params.put(PARAM_WAC, "");
+            return params;
+        }
+
+        @Override
+        protected IRequestBase<String> createRequest(List<NameValuePair> params) {
+            int newSkip = nextSkip;
+            nextSkip += PAGE_SIZE;
+            params.add(new BasicNameValuePair(PARAM_SKIP, String.valueOf(newSkip)));
+            params.add(new BasicNameValuePair(PARAM_TAKE, String.valueOf(PAGE_SIZE)));
+            return new RequestString<HttpGet>(config.wapiSearchReflections, params, true, HttpGet.class);
+        }
+
+        @Override
+        protected List<Reflection> onResponseDone(String response) {
+            List<Reflection> reflections = new ArrayList<Reflection>();
+            try {
+                JSONObject jsonContainer = new JSONObject(response);
+                JSONArray json = jsonContainer.getJSONArray(JSON_FIELD_REFLECTIONS);
+                for (int i = 0; i < json.length(); i++) {
+                    JSONObject jsonO = (JSONObject) json.get(i);
+                    reflections.add(new Reflection(jsonO));
+                }
+
+                Log.d("json=" + json);
+            } catch (Exception e) {
+                logError(e);
+            }
+
+            return reflections;
+        }
+
 
         @Override
         protected abstract void onPostExecute(List<Reflection> reflections);
     }
 
-    public abstract class RequestRequestBusinessAccountsAsyncTask extends AsyncTask<Void, Integer, List<Account>> {
+    public abstract class RequestPictureAsyncTask extends RequestAsyncTaskBase<byte[], byte[]> {
+
+        public static final String PARAM_ID = "id";
+        public static final String PARAM_SIZE = "size";
+
         @Override
-        protected List<Account> doInBackground(Void... voids) {
-            return WAPIClient.this.requestBusinessAccounts();
+        protected Parameters createParams() {
+            Parameters params = new Parameters();
+            params.put(PARAM_ID, "");
+            params.put(PARAM_SIZE, "");
+            return params;
+        }
+
+        @Override
+        protected IRequestBase<byte[]> createRequest(List<NameValuePair> params) {
+            return new RequestByteArray<HttpGet>(config.wapiLoadPicture, params, true, HttpGet.class);
+        }
+
+        @Override
+        protected byte[] onResponseDone(byte[] pictureBytes) {
+            Log.d("pictureBytes=" + pictureBytes.length);
+            return pictureBytes;
+        }
+
+        @Override
+        protected abstract void onPostExecute(byte[] result);
+    }
+
+    public abstract class RequestBusinessAccountsAsyncTask extends RequestAsyncTaskBase<List<Account>, String> {
+
+        @Override
+        protected Parameters createParams() {
+            return new Parameters();
+        }
+
+        @Override
+        protected RequestString<HttpGet> createRequest(List<NameValuePair> params) {
+            return new RequestString<HttpGet>(config.wapiGetBusinessAcountsMy, true, HttpGet.class);
+        }
+
+        @Override
+        protected List<Account> onResponseDone(String responseResult) {
+            List<Account> accounts = new ArrayList<Account>();
+            try {
+                String responseText = request.execute();
+                JSONArray json = new JSONArray(responseText);
+                Account account;
+                for (int i = 0; i < json.length(); i++) {
+                    JSONObject jsonO = (JSONObject) json.get(i);
+                    account = new Account(jsonO);
+                    accounts.add(account);
+                }
+
+                Log.d("json=" + json);
+            } catch (Exception e) {
+                logError(e);
+            }
+
+            return accounts;
         }
 
         @Override
         protected abstract void onPostExecute(List<Account> accounts);
     }
-
-
 }
