@@ -106,6 +106,7 @@ public class WapiClient {
                 }
             };
             task.execute();
+            return;
         }
 
         originActivity.onAuthenticated(this);
