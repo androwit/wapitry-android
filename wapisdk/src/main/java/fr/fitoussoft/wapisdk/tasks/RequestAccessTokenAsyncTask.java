@@ -1,5 +1,7 @@
 package fr.fitoussoft.wapisdk.tasks;
 
+import android.app.Activity;
+
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.message.BasicNameValuePair;
@@ -27,8 +29,8 @@ public abstract class RequestAccessTokenAsyncTask extends RequestAsyncTaskBase<B
     private final static String JSON_FIELD_REFRESH_TOKEN = "refresh_token";
     private final static String JSON_FIELD_EXPIRES_IN = "expires_in";
 
-    public RequestAccessTokenAsyncTask(WapiClient wapiClient) {
-        super(wapiClient);
+    public RequestAccessTokenAsyncTask(Activity origin) {
+        super(origin);
     }
 
     @Override

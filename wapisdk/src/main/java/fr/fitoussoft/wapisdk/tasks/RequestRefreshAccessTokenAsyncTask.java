@@ -1,5 +1,7 @@
 package fr.fitoussoft.wapisdk.tasks;
 
+import android.app.Activity;
+
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.HttpPost;
 
@@ -13,8 +15,8 @@ import fr.fitoussoft.wapisdk.requests.RequestString;
 */
 public abstract class RequestRefreshAccessTokenAsyncTask extends RequestAccessTokenAsyncTask {
 
-    public RequestRefreshAccessTokenAsyncTask(WapiClient wapiClient) {
-        super(wapiClient);
+    public RequestRefreshAccessTokenAsyncTask(Activity origin) {
+        super(origin);
     }
 
     @Override

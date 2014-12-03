@@ -5,4 +5,5 @@ package fr.fitoussoft.wapisdk.requests;
 */
 public interface IRequestBase<T> {
     T execute();
+    boolean isWithAccessToken();
 }

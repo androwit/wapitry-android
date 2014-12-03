@@ -17,14 +17,12 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-import fr.fitoussoft.wapisdk.activities.IWapiActivity;
-import fr.fitoussoft.wapisdk.tasks.RequestNextReflectionsAsyncTask;
-import fr.fitoussoft.wapisdk.helpers.WapiClient;
 import fr.fitoussoft.wapisdk.models.Reflection;
+import fr.fitoussoft.wapisdk.tasks.RequestNextReflectionsAsyncTask;
 import fr.fitoussoft.wapitry.Application;
 import fr.fitoussoft.wapitry.R;
 
-public class ReflectionsActivity extends Activity implements IWapiActivity {
+public class ReflectionsActivity extends Activity {
 
     private List<Reflection> reflections;
     private String wac;
@@ -106,19 +104,14 @@ public class ReflectionsActivity extends Activity implements IWapiActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        ((Application) getApplication()).getWapiClient().verifyAuthentication(this);
-    }
-
-    @Override
-    public void onAuthenticated(final WapiClient wapiClient) {
         progressBar.setVisibility(View.VISIBLE);
         reflections.clear();
-        wapiClient.nextSkipReflectionRequest = 0;
-        executeRequestNextReflectionsAsyncTask(wapiClient);
+        RequestNextReflectionsAsyncTask.nextSkipReflectionRequest = 0;
+        executeRequestNextReflectionsAsyncTask();
     }
 
-    private RequestNextReflectionsAsyncTask executeRequestNextReflectionsAsyncTask(WapiClient wapiClient) {
-        RequestNextReflectionsAsyncTask task = new RequestNextReflectionsAsyncTask(wapiClient) {
+    private RequestNextReflectionsAsyncTask executeRequestNextReflectionsAsyncTask() {
+        RequestNextReflectionsAsyncTask task = new RequestNextReflectionsAsyncTask(this) {
             @Override
             protected void onPostExecute(List<Reflection> reflections) {
                 if (reflections != null) {
@@ -136,14 +129,9 @@ public class ReflectionsActivity extends Activity implements IWapiActivity {
     public class EndlessScrollListener implements AbsListView.OnScrollListener {
 
         private int visibleThreshold = 2;
-        private int currentPage = 0;
         private int previousTotal = 0;
 
         public EndlessScrollListener() {
-        }
-
-        public EndlessScrollListener(int visibleThreshold) {
-            this.visibleThreshold = visibleThreshold;
         }
 
         @Override
@@ -154,7 +142,6 @@ public class ReflectionsActivity extends Activity implements IWapiActivity {
                 if (totalItemCount > previousTotal) {
                     loading = false;
                     previousTotal = totalItemCount;
-                    currentPage++;
                 }
             }
 
@@ -163,7 +150,7 @@ public class ReflectionsActivity extends Activity implements IWapiActivity {
                 // but you can call any function here.
                 progressBar.setVisibility(View.VISIBLE);
                 Log.d("[TRY]", "execute from scroll");
-                executeRequestNextReflectionsAsyncTask(((Application) getApplication()).getWapiClient());
+                executeRequestNextReflectionsAsyncTask();
                 loading = true;
             }
         }

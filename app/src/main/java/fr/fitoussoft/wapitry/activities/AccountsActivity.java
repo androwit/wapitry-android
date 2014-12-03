@@ -21,21 +21,20 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-import fr.fitoussoft.wapisdk.activities.IWapiActivity;
 import fr.fitoussoft.wapisdk.tasks.RequestBusinessAccountsAsyncTask;
 import fr.fitoussoft.wapisdk.tasks.RequestPictureAsyncTask;
-import fr.fitoussoft.wapisdk.helpers.WapiClient;
 import fr.fitoussoft.wapisdk.models.Account;
 import fr.fitoussoft.wapitry.Application;
 import fr.fitoussoft.wapitry.R;
 
-public class AccountsActivity extends Activity implements IWapiActivity {
+public class AccountsActivity extends Activity {
     private List<Account> accounts;
     private ArrayAdapter<Account> accountsAdapter;
     private ProgressBar progressBar;
 
-    private void displayAccounts(WapiClient wapiClient) {
-        RequestBusinessAccountsAsyncTask task = new RequestBusinessAccountsAsyncTask(wapiClient) {
+    private void displayAccounts() {
+        accounts.clear();
+        RequestBusinessAccountsAsyncTask task = new RequestBusinessAccountsAsyncTask(this) {
             @Override
             protected void onPostExecute(List<Account> accounts) {
                 if (accounts != null) {
@@ -44,7 +43,7 @@ public class AccountsActivity extends Activity implements IWapiActivity {
 
                 RequestPictureAsyncTask task;
                 for (final Account account : accounts) {
-                    task = new RequestPictureAsyncTask(wapiClient) {
+                    task = new RequestPictureAsyncTask(AccountsActivity.this) {
 
                         @Override
                         protected void onPostExecute(byte[] pictureBytes) {
@@ -131,8 +130,7 @@ public class AccountsActivity extends Activity implements IWapiActivity {
     protected void onResume() {
         Log.d("[TRY]", "Accounts onResume.");
         super.onResume();
-        accounts.clear();
-        ((Application) getApplication()).getWapiClient().verifyAuthentication(this);
+        displayAccounts();
     }
 
     @Override
@@ -156,8 +154,4 @@ public class AccountsActivity extends Activity implements IWapiActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void onAuthenticated(WapiClient wapiClient) {
-        displayAccounts(wapiClient);
-    }
 }

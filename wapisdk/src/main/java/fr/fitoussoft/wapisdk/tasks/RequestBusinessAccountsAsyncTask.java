@@ -1,5 +1,7 @@
 package fr.fitoussoft.wapisdk.tasks;
 
+import android.app.Activity;
+
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.HttpGet;
 import org.json.JSONArray;
@@ -18,8 +20,8 @@ import fr.fitoussoft.wapisdk.requests.RequestString;
  */
 public abstract class RequestBusinessAccountsAsyncTask extends RequestAsyncTaskBase<List<Account>, String> {
 
-    public RequestBusinessAccountsAsyncTask(WapiClient wapiClient) {
-        super(wapiClient);
+    public RequestBusinessAccountsAsyncTask(Activity origin) {
+        super(origin);
     }
 
     @Override

@@ -13,8 +13,11 @@ import android.webkit.CookieSyncManager;
 import android.webkit.ValueCallback;
 import android.widget.Toast;
 
+import java.util.LinkedList;
+import java.util.Queue;
+
 import fr.fitoussoft.wapisdk.activities.AuthActivity;
-import fr.fitoussoft.wapisdk.activities.IWapiActivity;
+import fr.fitoussoft.wapisdk.tasks.RequestAsyncTaskBase;
 import fr.fitoussoft.wapisdk.tasks.RequestRefreshAccessTokenAsyncTask;
 
 
@@ -23,11 +26,12 @@ import fr.fitoussoft.wapisdk.tasks.RequestRefreshAccessTokenAsyncTask;
  */
 public class WapiClient {
     public static boolean DEBUG = true;
-    public int nextSkipReflectionRequest = 0;
     private Configuration config;
-
+    private boolean isAuthenticating = false;
+    private boolean isRefreshingToken = false;
     private Context context;
     private WapiToken token;
+    private Queue<RequestAsyncTaskBase> taskQueue = new LinkedList<RequestAsyncTaskBase>();
 
     public WapiClient(Context context, SharedPreferences prefs) {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().detectAll().permitAll().build();
@@ -42,7 +46,24 @@ public class WapiClient {
         token = new WapiToken(prefs, DEBUG);
     }
 
-    private static void navigateToAuth(Activity activity) {
+    public boolean isRefreshingToken() {
+        return isRefreshingToken;
+    }
+
+    public void setRefreshingToken(boolean isRefreshingToken) {
+        this.isRefreshingToken = isRefreshingToken;
+    }
+
+    public boolean isAuthenticating() {
+        return isAuthenticating;
+    }
+
+    public void setAuthenticating(boolean isAuthenticating) {
+        this.isAuthenticating = isAuthenticating;
+    }
+
+    private void navigateToAuth(Activity activity) {
+        isAuthenticating = true;
         Intent myIntent = new Intent(activity, AuthActivity.class);
         activity.startActivityForResult(myIntent, 0);
     }
@@ -63,14 +84,14 @@ public class WapiClient {
 
                 @Override
                 public void onReceiveValue(Boolean aBoolean) {
-                    WapiClient.navigateToAuth(activity);
+                    navigateToAuth(activity);
                 }
             });
         } else {
             CookieSyncManager.createInstance(context);
             CookieManager cookieManager = CookieManager.getInstance();
             cookieManager.removeAllCookie();
-            WapiClient.navigateToAuth(activity);
+            navigateToAuth(activity);
         }
     }
 
@@ -90,27 +111,38 @@ public class WapiClient {
         return context;
     }
 
-    public void verifyAuthentication(final Activity origin) {
-        if (hasToAuthenticate()) {
-            navigateToAuth(origin);
+    public void verifyAuthentication(RequestAsyncTaskBase task) {
+        if (isRefreshingToken) {
+            taskQueue.add(task);
             return;
         }
 
-        final IWapiActivity originActivity = (IWapiActivity) origin;
+        if (hasToAuthenticate()) {
+            navigateToAuth(task.getOrigin());
+            task.cancel(true);
+            return;
+        }
 
         if (hasToRefreshAccessToken()) {
-            RequestRefreshAccessTokenAsyncTask task = new RequestRefreshAccessTokenAsyncTask(this) {
+            setRefreshingToken(true);
+            RequestRefreshAccessTokenAsyncTask refreshTask = new RequestRefreshAccessTokenAsyncTask(task.getOrigin()) {
                 @Override
                 protected void onPostExecute(Boolean result) {
-                    originActivity.onAuthenticated(WapiClient.this);
+                    setRefreshingToken(false);
+                    RequestAsyncTaskBase taskInQueue;
+                    while((taskInQueue = taskQueue.poll()) != null) {
+                        taskInQueue.onAuthenticated();
+                    }
                 }
             };
-            task.execute();
+            refreshTask.execute();
+            taskQueue.add(task);
             return;
         }
 
-        originActivity.onAuthenticated(this);
+        task.onAuthenticated();
     }
+
 
     public void logError(Exception e) {
         Log.e("Parse Exception " + e + "");

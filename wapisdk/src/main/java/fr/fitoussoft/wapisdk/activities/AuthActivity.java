@@ -20,7 +20,7 @@ import fr.fitoussoft.wapisdk.helpers.Log;
 import fr.fitoussoft.wapisdk.tasks.RequestAccessTokenAsyncTask;
 import fr.fitoussoft.wapisdk.helpers.WapiClient;
 
-public class AuthActivity extends Activity implements IWapiActivity {
+public class AuthActivity extends Activity {
 
     private WebView loginWebView;
     private WebViewClient loginWebViewClient;
@@ -117,11 +117,12 @@ public class AuthActivity extends Activity implements IWapiActivity {
         }
 
         if (requestAccessTask == null) {
-            requestAccessTask = new RequestAccessTokenAsyncTask(client) {
+            requestAccessTask = new RequestAccessTokenAsyncTask(this) {
 
                 @Override
                 protected void onPostExecute(Boolean result) {
                     if (result) {
+                        wapiClient.setAuthenticating(false);
                         AuthActivity.this.finish();
                     }
                 }
@@ -129,10 +130,5 @@ public class AuthActivity extends Activity implements IWapiActivity {
         }
 
         authenticate(client);
-    }
-
-    @Override
-    public void onAuthenticated(WapiClient wapiClient) {
-        // nothing to do.
     }
 }

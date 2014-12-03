@@ -1,5 +1,7 @@
 package fr.fitoussoft.wapisdk.tasks;
 
+import android.app.Activity;
+
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.HttpGet;
 
@@ -18,8 +20,8 @@ public abstract class RequestPictureAsyncTask extends RequestAsyncTaskBase<byte[
     public static final String PARAM_ID = "id";
     public static final String PARAM_SIZE = "size";
 
-    public RequestPictureAsyncTask(WapiClient wapiClient) {
-        super(wapiClient);
+    public RequestPictureAsyncTask(Activity origin) {
+        super(origin);
     }
 
     @Override

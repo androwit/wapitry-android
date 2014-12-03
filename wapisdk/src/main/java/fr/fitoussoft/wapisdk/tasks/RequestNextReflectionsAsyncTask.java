@@ -1,5 +1,7 @@
 package fr.fitoussoft.wapisdk.tasks;
 
+import android.app.Activity;
+
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.message.BasicNameValuePair;
@@ -26,8 +28,10 @@ public abstract class RequestNextReflectionsAsyncTask extends RequestAsyncTaskBa
     protected final static String PARAM_TAKE = "take";
     private final static String JSON_FIELD_REFLECTIONS = "reflections";
 
-    public RequestNextReflectionsAsyncTask(WapiClient wapiClient) {
-        super(wapiClient);
+    public static int nextSkipReflectionRequest = 0;
+
+    public RequestNextReflectionsAsyncTask(Activity origin) {
+        super(origin);
     }
 
 
@@ -40,8 +44,8 @@ public abstract class RequestNextReflectionsAsyncTask extends RequestAsyncTaskBa
 
     @Override
     protected IRequestBase<String> createRequest(List<NameValuePair> params) {
-        int newSkip = wapiClient.nextSkipReflectionRequest;
-        wapiClient.nextSkipReflectionRequest += PAGE_SIZE;
+        int newSkip = nextSkipReflectionRequest;
+        nextSkipReflectionRequest += PAGE_SIZE;
         params.add(new BasicNameValuePair(PARAM_SKIP, String.valueOf(newSkip)));
         params.add(new BasicNameValuePair(PARAM_TAKE, String.valueOf(PAGE_SIZE)));
         return new RequestString<HttpGet>(wapiClient, wapiClient.getConfig().wapiSearchReflections, params, true, HttpGet.class);

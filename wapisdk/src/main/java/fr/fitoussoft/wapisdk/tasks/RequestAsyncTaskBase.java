@@ -1,5 +1,6 @@
 package fr.fitoussoft.wapisdk.tasks;
 
+import android.app.Activity;
 import android.os.AsyncTask;
 
 import org.apache.http.NameValuePair;
@@ -9,21 +10,32 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import fr.fitoussoft.wapisdk.IWapiApplication;
 import fr.fitoussoft.wapisdk.helpers.WapiClient;
 import fr.fitoussoft.wapisdk.requests.IRequestBase;
 
 /**
-* Created by emmanuel.fitoussi on 30/11/2014.
-*/
+ * Created by emmanuel.fitoussi on 30/11/2014.
+ */
 public abstract class RequestAsyncTaskBase<V, R> extends AsyncTask<Void, Integer, V> {
 
     protected WapiClient wapiClient;
     protected IRequestBase<R> request;
     protected Parameters params;
+    protected Activity origin;
 
-    public RequestAsyncTaskBase(WapiClient wapiClient) {
-        this.wapiClient = wapiClient;
+    public RequestAsyncTaskBase(Activity origin) {
+        this.origin = origin;
+        this.wapiClient = ((IWapiApplication) origin.getApplication()).getWapiClient();
         this.params = createParams();
+    }
+
+    public Activity getOrigin() {
+        return origin;
+    }
+
+    public WapiClient getWapiClient() {
+        return wapiClient;
     }
 
     public Parameters getParams() {
@@ -35,13 +47,28 @@ public abstract class RequestAsyncTaskBase<V, R> extends AsyncTask<Void, Integer
     protected abstract Parameters createParams();
 
     @Override
-    protected V doInBackground(Void... voids) {
+    protected void onPreExecute() {
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         for (String key : this.params.keySet()) {
             params.add(new BasicNameValuePair(key, this.params.get(key)));
         }
 
         this.request = createRequest(params);
+
+        if (!request.isWithAccessToken()) {
+            super.onPreExecute();
+            return;
+        }
+
+        wapiClient.verifyAuthentication(this);
+    }
+
+    public void onAuthenticated() {
+        super.onPreExecute();
+    }
+
+    @Override
+    protected V doInBackground(Void... voids) {
         R responseResult = request.execute();
         return onResponseDone(responseResult);
     }
