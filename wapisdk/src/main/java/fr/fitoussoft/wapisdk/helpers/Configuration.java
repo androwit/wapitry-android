@@ -5,8 +5,8 @@ import android.content.res.Resources;
 import fr.fitoussoft.wapisdk.R;
 
 /**
-* Created by emmanuel.fitoussi on 30/11/2014.
-*/
+ * Created by emmanuel.fitoussi on 30/11/2014.
+ */
 public class Configuration {
     public String clientId;
     public String clientSecret;

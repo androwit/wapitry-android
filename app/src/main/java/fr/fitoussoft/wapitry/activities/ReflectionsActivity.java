@@ -17,7 +17,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-import fr.fitoussoft.wapisdk.models.Reflection;
+import fr.fitoussoft.wapisdk.models.reflections.Reflection;
 import fr.fitoussoft.wapisdk.tasks.RequestNextReflectionsAsyncTask;
 import fr.fitoussoft.wapitry.Application;
 import fr.fitoussoft.wapitry.R;

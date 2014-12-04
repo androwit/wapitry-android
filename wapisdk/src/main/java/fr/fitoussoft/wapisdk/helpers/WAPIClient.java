@@ -130,7 +130,7 @@ public class WapiClient {
                 protected void onPostExecute(Boolean result) {
                     setRefreshingToken(false);
                     RequestAsyncTaskBase taskInQueue;
-                    while((taskInQueue = taskQueue.poll()) != null) {
+                    while ((taskInQueue = taskQueue.poll()) != null) {
                         taskInQueue.onAuthenticated();
                     }
                 }

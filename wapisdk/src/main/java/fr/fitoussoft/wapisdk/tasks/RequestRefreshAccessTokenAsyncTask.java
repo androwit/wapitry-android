@@ -7,12 +7,11 @@ import org.apache.http.client.methods.HttpPost;
 
 import java.util.List;
 
-import fr.fitoussoft.wapisdk.helpers.WapiClient;
 import fr.fitoussoft.wapisdk.requests.RequestString;
 
 /**
-* Created by emmanuel.fitoussi on 30/11/2014.
-*/
+ * Created by emmanuel.fitoussi on 30/11/2014.
+ */
 public abstract class RequestRefreshAccessTokenAsyncTask extends RequestAccessTokenAsyncTask {
 
     public RequestRefreshAccessTokenAsyncTask(Activity origin) {

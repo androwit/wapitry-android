@@ -21,9 +21,9 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
+import fr.fitoussoft.wapisdk.models.Account;
 import fr.fitoussoft.wapisdk.tasks.RequestBusinessAccountsAsyncTask;
 import fr.fitoussoft.wapisdk.tasks.RequestPictureAsyncTask;
-import fr.fitoussoft.wapisdk.models.Account;
 import fr.fitoussoft.wapitry.Application;
 import fr.fitoussoft.wapitry.R;
 
@@ -48,14 +48,14 @@ public class AccountsActivity extends Activity {
                         @Override
                         protected void onPostExecute(byte[] pictureBytes) {
                             account.setPictureBytes(pictureBytes);
-                            Bitmap picture = BitmapFactory.decodeByteArray(pictureBytes, 0, pictureBytes.length);
-                            account.setPicture(picture);
+                            Bitmap pictureBitmap = BitmapFactory.decodeByteArray(pictureBytes, 0, pictureBytes.length);
+                            account.setPictureBitmap(pictureBitmap);
                             accountsAdapter.notifyDataSetChanged();
                         }
                     };
 
-                    task.getParams().put(RequestPictureAsyncTask.PARAM_ID, account.getPictureId());
-                    task.getParams().put(RequestPictureAsyncTask.PARAM_SIZE,  AccountsActivity.this.getResources().getString(fr.fitoussoft.wapisdk.R.string.icon_size));
+                    task.getParams().put(RequestPictureAsyncTask.PARAM_ID, account.getPicture());
+                    task.getParams().put(RequestPictureAsyncTask.PARAM_SIZE, AccountsActivity.this.getResources().getString(fr.fitoussoft.wapisdk.R.string.icon_size));
                     task.execute();
                 }
 
@@ -104,7 +104,7 @@ public class AccountsActivity extends Activity {
                     // Populate the data into the template view using the data object
                     tvName.setText(account.getName());
                     tvWac.setText(account.getWac());
-                    ivPicture.setImageBitmap(account.getPicture());
+                    ivPicture.setImageBitmap(account.getPictureBitmap());
 
                     // Return the completed view to render on screen
                     return convertView;

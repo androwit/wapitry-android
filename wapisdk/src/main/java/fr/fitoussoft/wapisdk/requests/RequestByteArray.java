@@ -11,8 +11,8 @@ import java.util.List;
 import fr.fitoussoft.wapisdk.helpers.WapiClient;
 
 /**
-* Created by emmanuel.fitoussi on 30/11/2014.
-*/
+ * Created by emmanuel.fitoussi on 30/11/2014.
+ */
 public class RequestByteArray<T extends HttpRequestBase> extends RequestBase<T, byte[]> {
 
     private WapiClient wapiClient;

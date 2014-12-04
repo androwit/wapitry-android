@@ -17,8 +17,8 @@ import java.io.UnsupportedEncodingException;
 import fr.fitoussoft.wapisdk.IWapiApplication;
 import fr.fitoussoft.wapisdk.R;
 import fr.fitoussoft.wapisdk.helpers.Log;
-import fr.fitoussoft.wapisdk.tasks.RequestAccessTokenAsyncTask;
 import fr.fitoussoft.wapisdk.helpers.WapiClient;
+import fr.fitoussoft.wapisdk.tasks.RequestAccessTokenAsyncTask;
 
 public class AuthActivity extends Activity {
 
@@ -92,7 +92,6 @@ public class AuthActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_auth);
     }
-
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override

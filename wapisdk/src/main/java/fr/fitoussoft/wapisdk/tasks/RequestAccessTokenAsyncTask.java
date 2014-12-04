@@ -10,12 +10,11 @@ import org.json.JSONObject;
 
 import java.util.List;
 
-import fr.fitoussoft.wapisdk.helpers.WapiClient;
 import fr.fitoussoft.wapisdk.requests.RequestString;
 
 /**
-* Created by emmanuel.fitoussi on 30/11/2014.
-*/
+ * Created by emmanuel.fitoussi on 30/11/2014.
+ */
 public abstract class RequestAccessTokenAsyncTask extends RequestAsyncTaskBase<Boolean, String> {
 
     public final static String PARAM_CODE = "code";
@@ -50,7 +49,7 @@ public abstract class RequestAccessTokenAsyncTask extends RequestAsyncTaskBase<B
     }
 
     @Override
-    protected Boolean onResponseDone(String responseResult) {
+    protected Boolean onResponseParsed(String responseResult) {
         boolean result = false;
         try {
             JSONObject json = new JSONObject(responseResult);

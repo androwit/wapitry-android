@@ -2,24 +2,24 @@ package fr.fitoussoft.wapisdk.tasks;
 
 import android.app.Activity;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.message.BasicNameValuePair;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import fr.fitoussoft.wapisdk.helpers.Log;
-import fr.fitoussoft.wapisdk.helpers.WapiClient;
-import fr.fitoussoft.wapisdk.models.Reflection;
+import fr.fitoussoft.wapisdk.models.containers.ReflectionContainer;
+import fr.fitoussoft.wapisdk.models.reflections.Reflection;
 import fr.fitoussoft.wapisdk.requests.IRequestBase;
 import fr.fitoussoft.wapisdk.requests.RequestString;
 
 /**
-* Created by emmanuel.fitoussi on 30/11/2014.
-*/
+ * Created by emmanuel.fitoussi on 30/11/2014.
+ */
 public abstract class RequestNextReflectionsAsyncTask extends RequestAsyncTaskBase<List<Reflection>, String> {
 
     public final static String PARAM_WAC = "WAC";
@@ -52,17 +52,14 @@ public abstract class RequestNextReflectionsAsyncTask extends RequestAsyncTaskBa
     }
 
     @Override
-    protected List<Reflection> onResponseDone(String response) {
+    protected List<Reflection> onResponseParsed(String response) {
         List<Reflection> reflections = new ArrayList<Reflection>();
+        ReflectionContainer container;
         try {
-            JSONObject jsonContainer = new JSONObject(response);
-            JSONArray json = jsonContainer.getJSONArray(JSON_FIELD_REFLECTIONS);
-            for (int i = 0; i < json.length(); i++) {
-                JSONObject jsonO = (JSONObject) json.get(i);
-                reflections.add(new Reflection(jsonO));
-            }
-
-            Log.d("json=" + json);
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+            container = mapper.readValue(response, ReflectionContainer.class);
+            reflections = container.getReflections();
         } catch (Exception e) {
             wapiClient.logError(e);
         }

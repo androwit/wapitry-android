@@ -29,15 +29,16 @@ import fr.fitoussoft.wapisdk.helpers.PermisiveSSLSocketFactory;
 import fr.fitoussoft.wapisdk.helpers.WapiClient;
 
 /**
-* Created by emmanuel.fitoussi on 30/11/2014.
-*/
+ * Created by emmanuel.fitoussi on 30/11/2014.
+ */
 public abstract class RequestBase<T extends HttpRequestBase, U> implements IRequestBase<U> {
-    private WapiClient wapiClient;
+    private final static HttpClient httpClient = getNewHttpClient();
     protected boolean isWithAccessToken = false;
     protected String url;
     protected T httpMethod;
     protected U response;
     protected List<NameValuePair> params;
+    private WapiClient wapiClient;
 
     public RequestBase(WapiClient wapiClient, String url, boolean isWithAccessToken, Class<T> httpMethodClass) {
         this(wapiClient, url, null, isWithAccessToken, httpMethodClass);
@@ -80,8 +81,6 @@ public abstract class RequestBase<T extends HttpRequestBase, U> implements IRequ
             wapiClient.logError(e);
         }
     }
-
-    private final static HttpClient httpClient = getNewHttpClient();
 
     private static HttpClient getNewHttpClient() {
         try {

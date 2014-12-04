@@ -1,9 +1,6 @@
 package fr.fitoussoft.wapisdk.models;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import fr.fitoussoft.wapisdk.helpers.Log;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Created by emmanuel.fitoussi on 15/10/2014.
@@ -11,26 +8,38 @@ import fr.fitoussoft.wapisdk.helpers.Log;
 public class Model {
     private final static String JSON_FIELD_ID = "id";
     private final static String JSON_FIELD_NAME = "name";
-    private Integer id;
+    private final static String JSON_FIELD_WTYPE = "wType";
+    private final static String JSON_FIELD_PICTURE = "picture";
+
+    @JsonProperty(JSON_FIELD_WTYPE)
+    private String wType;
+
+    @JsonProperty(JSON_FIELD_ID)
+    private Number id;
+
+    @JsonProperty(JSON_FIELD_NAME)
     private String name;
+
+    @JsonProperty(JSON_FIELD_PICTURE)
+    private String picture;
+
 
     public Model() {
     }
 
-    public Model(JSONObject json) {
-        parse(json);
+    public String getPicture() {
+        return picture;
     }
 
-    protected void parse(JSONObject json) {
-        try {
-            this.id = json.getInt(JSON_FIELD_ID);
-            this.name = json.getString(JSON_FIELD_NAME);
-        } catch (JSONException e) {
-            Log.d(String.format("error during parse of %s.", Model.class.toString()));
-        }
+    public void setPicture(String picture) {
+        this.picture = picture;
     }
 
-    public int getId() {
+    public String getwType() {
+        return wType;
+    }
+
+    public Number getId() {
         return id;
     }
 

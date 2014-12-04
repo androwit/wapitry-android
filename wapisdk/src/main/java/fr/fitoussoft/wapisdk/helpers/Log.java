@@ -6,6 +6,7 @@ package fr.fitoussoft.wapisdk.helpers;
 public class Log {
     /**
      * Logs a message on debug mode.
+     *
      * @param message message text to log.
      */
     public static void d(String message) {
@@ -14,6 +15,7 @@ public class Log {
 
     /**
      * Logs an error.
+     *
      * @param message message text to log.
      */
     public static void e(String message) {

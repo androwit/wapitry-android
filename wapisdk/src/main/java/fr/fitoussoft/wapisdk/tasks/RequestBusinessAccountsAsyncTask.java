@@ -2,16 +2,15 @@ package fr.fitoussoft.wapisdk.tasks;
 
 import android.app.Activity;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.HttpGet;
-import org.json.JSONArray;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import fr.fitoussoft.wapisdk.helpers.Log;
-import fr.fitoussoft.wapisdk.helpers.WapiClient;
 import fr.fitoussoft.wapisdk.models.Account;
 import fr.fitoussoft.wapisdk.requests.RequestString;
 
@@ -35,18 +34,12 @@ public abstract class RequestBusinessAccountsAsyncTask extends RequestAsyncTaskB
     }
 
     @Override
-    protected List<Account> onResponseDone(String responseResult) {
+    protected List<Account> onResponseParsed(String responseResult) {
         List<Account> accounts = new ArrayList<Account>();
         try {
-            JSONArray json = new JSONArray(responseResult);
-            Account account;
-            for (int i = 0; i < json.length(); i++) {
-                JSONObject jsonO = (JSONObject) json.get(i);
-                account = new Account(jsonO);
-                accounts.add(account);
-            }
-
-            Log.d("json=" + json);
+            ObjectMapper mapper = new ObjectMapper();
+            accounts = mapper.readValue(responseResult, new TypeReference<List<Account>>() {
+            });
         } catch (Exception e) {
             wapiClient.logError(e);
         }

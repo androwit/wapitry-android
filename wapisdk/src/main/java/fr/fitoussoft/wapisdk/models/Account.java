@@ -2,46 +2,118 @@ package fr.fitoussoft.wapisdk.models;
 
 import android.graphics.Bitmap;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import fr.fitoussoft.wapisdk.helpers.Log;
-
 /**
  * Created by emmanuel.fitoussi on 07/10/2014.
  */
 public class Account extends Model {
 
-    private final static String JSON_FIELD_PICTURE = "picture";
     private final static String JSON_FIELD_WAC = "wac";
 
-    private String pictureId;
-    private byte[] pictureBytes;
-    private Bitmap picture;
     private String wac;
+    private String status;
+    private String ownerAccountID;
+    private String operatorAccountID;
+    private String dataStoreSize;
+    private String url;
+    private String updateDate;
+    private String creationDate;
+    private String hasDataStore;
+    private Address address;
+    private String description;
+    private byte[] pictureBytes;
+    private Bitmap pictureBitmap;
 
-    public Account(JSONObject json) {
-        super(json);
+    ///
+
+    public Account() {
+        super();
     }
 
-    @Override
-    protected void parse(JSONObject json) {
-        super.parse(json);
+    ///
 
-        try {
-            pictureId = json.getString(JSON_FIELD_PICTURE);
-            wac = json.getString(JSON_FIELD_WAC);
-        } catch (JSONException e) {
-            Log.d(String.format("error during parse of %s.", Account.class.toString()));
-        }
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getOwnerAccountID() {
+        return ownerAccountID;
+    }
+
+    public void setOwnerAccountID(String ownerAccountID) {
+        this.ownerAccountID = ownerAccountID;
+    }
+
+    public String getOperatorAccountID() {
+        return operatorAccountID;
+    }
+
+    public void setOperatorAccountID(String operatorAccountID) {
+        this.operatorAccountID = operatorAccountID;
+    }
+
+    public String getDataStoreSize() {
+        return dataStoreSize;
+    }
+
+    public void setDataStoreSize(String dataStoreSize) {
+        this.dataStoreSize = dataStoreSize;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public String getUpdateDate() {
+        return updateDate;
+    }
+
+    public void setUpdateDate(String updateDate) {
+        this.updateDate = updateDate;
+    }
+
+    public String getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate(String creationDate) {
+        this.creationDate = creationDate;
+    }
+
+
+    public String getHasDataStore() {
+        return hasDataStore;
+    }
+
+    public void setHasDataStore(String hasDataStore) {
+        this.hasDataStore = hasDataStore;
+    }
+
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getWac() {
         return wac;
-    }
-
-    public String getPictureId() {
-        return pictureId;
     }
 
     public byte[] getPictureBytes() {
@@ -52,12 +124,11 @@ public class Account extends Model {
         pictureBytes = bytes;
     }
 
-    public Bitmap getPicture() {
-        return picture;
+    public Bitmap getPictureBitmap() {
+        return pictureBitmap;
     }
 
-    public void setPicture(Bitmap picture) {
-        this.picture = picture;
+    public void setPictureBitmap(Bitmap pictureBitmap) {
+        this.pictureBitmap = pictureBitmap;
     }
-
 }

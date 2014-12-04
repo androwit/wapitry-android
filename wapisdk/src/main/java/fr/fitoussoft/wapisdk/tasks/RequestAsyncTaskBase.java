@@ -42,8 +42,19 @@ public abstract class RequestAsyncTaskBase<V, R> extends AsyncTask<Void, Integer
         return params;
     }
 
+    /**
+     * Creates the request.
+     *
+     * @param params Public parameters.
+     * @return The request.
+     */
     protected abstract IRequestBase<R> createRequest(List<NameValuePair> params);
 
+    /**
+     * Create public parameters.
+     *
+     * @return Parameters
+     */
     protected abstract Parameters createParams();
 
     @Override
@@ -70,13 +81,19 @@ public abstract class RequestAsyncTaskBase<V, R> extends AsyncTask<Void, Integer
     @Override
     protected V doInBackground(Void... voids) {
         R responseResult = request.execute();
-        return onResponseDone(responseResult);
+        return onResponseParsed(responseResult);
     }
-
-    protected abstract V onResponseDone(R responseResult);
 
     @Override
     protected abstract void onPostExecute(V result);
+
+    /**
+     * Triggered when response is parsed.
+     *
+     * @param responseResult The response to parse.
+     * @return The parsed response.
+     */
+    protected abstract V onResponseParsed(R responseResult);
 
     public class Parameters extends HashMap<String, String> {
     }

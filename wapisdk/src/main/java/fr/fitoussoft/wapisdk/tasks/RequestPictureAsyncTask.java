@@ -8,13 +8,12 @@ import org.apache.http.client.methods.HttpGet;
 import java.util.List;
 
 import fr.fitoussoft.wapisdk.helpers.Log;
-import fr.fitoussoft.wapisdk.helpers.WapiClient;
 import fr.fitoussoft.wapisdk.requests.IRequestBase;
 import fr.fitoussoft.wapisdk.requests.RequestByteArray;
 
 /**
-* Created by emmanuel.fitoussi on 30/11/2014.
-*/
+ * Created by emmanuel.fitoussi on 30/11/2014.
+ */
 public abstract class RequestPictureAsyncTask extends RequestAsyncTaskBase<byte[], byte[]> {
 
     public static final String PARAM_ID = "id";
@@ -38,7 +37,7 @@ public abstract class RequestPictureAsyncTask extends RequestAsyncTaskBase<byte[
     }
 
     @Override
-    protected byte[] onResponseDone(byte[] pictureBytes) {
+    protected byte[] onResponseParsed(byte[] pictureBytes) {
         Log.d("pictureBytes=" + pictureBytes.length);
         return pictureBytes;
     }
